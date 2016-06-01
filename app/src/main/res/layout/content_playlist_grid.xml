@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:cardview="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="172dp"
+    android:minHeight="172dp">
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="-4dp"
+        cardview:cardBackgroundColor="@color/lgt_background"
+        cardview:cardElevation="1dp"
+        cardview:cardPreventCornerOverlap="false"
+        cardview:cardUseCompatPadding="true"
+        cardview:cardCornerRadius="4dp">
+        <LinearLayout
+            android:orientation="vertical"
+            android:weightSum="1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <ImageView
+                android:layout_weight="1"
+                android:id="@+id/playlist_grid_thumb"
+                android:scaleType="fitXY"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <kr.edcan.u_stream.view.BoldFontTextView
+                    android:id="@+id/playlist_grid_title"
+                    android:text="재생목록 제목"
+                    android:textSize="17sp"
+                    android:singleLine="true"
+                    android:textColor="@color/text_lgt_gray"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <kr.edcan.u_stream.view.BoldFontTextView
+                    android:id="@+id/playlist_grid_count"
+                    android:text="00곡이 플레이 리스트에 있음"
+                    android:textSize="11sp"
+                    android:singleLine="true"
+                    android:textColor="@color/colorPrimary"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
+</LinearLayout>

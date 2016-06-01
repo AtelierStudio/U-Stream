@@ -1,0 +1,125 @@
+package kr.edcan.u_stream;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v4.view.ViewPager;
+import android.support.v4.widget.Space;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.orhanobut.logger.Logger;
+
+import java.util.List;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import io.realm.Realm;
+import kr.edcan.u_stream.adapter.MainAdapter;
+import kr.edcan.u_stream.model.MusicData;
+import kr.edcan.u_stream.model.RM_MusicData;
+import kr.edcan.u_stream.util.PlayUtil;
+/**
+ * Created by LNTCS on 2015-12-29.
+ */
+public class MainActivity extends AppCompatActivity{
+
+    @Bind(R.id.toolbar_title)
+    TextView toolbarTitle;
+    @Bind({R.id.main_tab_space, R.id.main_tab_playlist, R.id.main_tab_analog})
+    List<TextView> mainTabs;
+    @Bind(R.id.main_tab_margin)
+    Space tabMargin;
+    @Bind(R.id.pager)
+    ViewPager pager;
+
+    public static TextView playingTitle;
+    public static TextView playingSubtitle;
+    public static ImageButton playBtn;
+
+    MainAdapter adapter;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+        Logger.init("Logger");
+        initBtmBar();
+        toolbarTitle.setText("플레이보드");
+
+        adapter = new MainAdapter(this);
+        pager.setAdapter(adapter);
+        pager.setOffscreenPageLimit(5);
+        pager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, (position + positionOffset));
+                tabMargin.setLayoutParams(param);
+                for (TextView tv : mainTabs) {
+                    tv.setTextColor(getResources().getColorStateList(R.drawable.selector_primary_color));
+                }
+                mainTabs.get(Math.round(position + positionOffset)).setTextColor(getResources().getColor(R.color.colorPrimary));
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+            }
+        });
+        Realm realm = Realm.getInstance(this);
+        if(PlayService.mediaPlayer == null) {
+            if (realm.where(RM_MusicData.class).findFirst() != null) {
+                PlayUtil.runService(this, new MusicData(realm.where(RM_MusicData.class).findFirst()), false);
+            }
+        }else{
+            PlayService.setInfo();
+        }
+    }
+    private void initBtmBar() {
+        playBtn = (ImageButton) findViewById(R.id.main_playing_btn);
+
+        playingTitle = (TextView) findViewById(R.id.main_playing_title);
+        playingSubtitle = (TextView) findViewById(R.id.main_playing_subtitle);
+    }
+
+    @OnClick({R.id.main_tab_space, R.id.main_tab_playlist, R.id.main_tab_analog})
+    public void tabClick(View view) {
+        pager.setCurrentItem(mainTabs.indexOf(view));
+    }
+
+    @OnClick(R.id.main_tab)
+    void nowPlaying(View v) {
+        startActivity(new Intent(this, PlayerActivity.class));
+    }
+
+    @OnClick(R.id.toolbar_search)
+    void search(View v) {
+        startActivity(new Intent(this, SearchActivity.class));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        adapter.notifyDataSetChanged();
+        if(PlayService.mediaPlayer != null && PlayService.nowPlaying != null){
+            PlayService.setInfo();
+        }
+    }
+
+    @OnClick(R.id.main_playing_btn)
+    public void playMusic() {
+        if(PlayService.playable) {
+            PlayService.doPlay();
+        }else{
+            //준비중
+        }
+    }
+}

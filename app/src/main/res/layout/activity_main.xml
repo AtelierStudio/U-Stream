@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@color/background"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <include layout="@layout/toolbar_main"/>
+    <!--탭-->
+    <LinearLayout
+        android:weightSum="3"
+        android:paddingLeft="?attr/actionBarSize"
+        android:paddingRight="?attr/actionBarSize"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="36dp">
+        <kr.edcan.u_stream.view.BoldFontTextView
+            android:id="@+id/main_tab_space"
+            android:text="스페이스"
+            android:textSize="17sp"
+            android:textColor="@color/colorPrimary"
+            android:layout_weight="1"
+            android:gravity="bottom|center_horizontal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent" />
+        <kr.edcan.u_stream.view.BoldFontTextView
+            android:id="@+id/main_tab_playlist"
+            android:text="재생목록"
+            android:textSize="17sp"
+            android:textColor="@drawable/selector_primary_color"
+            android:layout_weight="1"
+            android:gravity="bottom|center_horizontal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent" />
+        <kr.edcan.u_stream.view.BoldFontTextView
+            android:id="@+id/main_tab_analog"
+            android:text="아날로그"
+            android:textSize="17sp"
+            android:textColor="@drawable/selector_primary_color"
+            android:layout_weight="1"
+            android:gravity="bottom|center_horizontal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_marginTop="4dp"
+        android:paddingLeft="?attr/actionBarSize"
+        android:paddingRight="?attr/actionBarSize"
+        android:weightSum="3"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <android.support.v4.widget.Space
+            android:id="@+id/main_tab_margin"
+            android:layout_weight="0"
+            android:layout_width="0dp"
+            android:layout_height="match_parent" />
+        <kr.edcan.u_stream.view.BoldFontTextView
+            android:layout_gravity="center_vertical"
+            android:text="●"
+            android:textSize="6sp"
+            android:textColor="@color/colorPrimary"
+            android:layout_weight="1"
+            android:gravity="bottom|center_horizontal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <!--콘텐트-->
+    <LinearLayout
+        android:layout_marginTop="8dp"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp">
+        <android.support.v4.view.ViewPager
+            android:id="@+id/pager"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" >
+        </android.support.v4.view.ViewPager>
+    </LinearLayout>
+
+    <!--플레이중-->
+    <LinearLayout
+        android:weightSum="1"
+        android:background="@color/lgt_background"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize">
+        <LinearLayout
+            android:id="@+id/main_tab"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:paddingLeft="16dp"
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent">
+            <kr.edcan.u_stream.view.FontTextView
+                android:id="@+id/main_playing_title"
+                android:text="μ'Stream"
+                android:textSize="21sp"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textColor="@color/text_lgt_gray"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <kr.edcan.u_stream.view.FontTextView
+                android:id="@+id/main_playing_subtitle"
+                android:text="by EDCAN"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:textColor="@color/text_lgt_gray"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <RelativeLayout
+            android:background="@color/colorPrimary"
+            android:layout_width="?attr/actionBarSize"
+            android:layout_height="?attr/actionBarSize">
+            <ImageButton
+                android:id="@+id/main_playing_btn"
+                android:src="@drawable/ic_btm_play"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </RelativeLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <kr.edcan.u_stream.view.BoldFontTextView
+        android:id="@+id/search_dialog_content"
+        android:text="''을(를) 재생목록에 추가합니다."
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <RelativeLayout
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:background="@color/background"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Spinner
+            android:id="@+id/search_dialog_spinner"
+            style="@style/Widget.AppCompat.Spinner.DropDown.ActionBar"
+            android:popupBackground="@color/background"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </RelativeLayout>
+</LinearLayout>
