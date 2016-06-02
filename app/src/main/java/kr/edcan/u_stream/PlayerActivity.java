@@ -1,10 +1,13 @@
 package kr.edcan.u_stream;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -13,60 +16,90 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
+import com.orhanobut.logger.Logger;
 
-import java.util.concurrent.TimeUnit;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import java.io.IOException;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import kr.edcan.u_stream.model.MusicData;
+import kr.edcan.u_stream.util.PlayUtil;
+import kr.edcan.u_stream.util.YouTubeClient;
 import kr.edcan.u_stream.view.SeekArc;
 
 public class PlayerActivity extends AppCompatActivity implements  View.OnTouchListener, SeekArc.OnSeekArcChangeListener{
 
     @Bind(R.id.toolbar_title)
     TextView toolbarTitle;
-    @Bind(R.id.player_seek)
-    SeekArc timeProgressBar;
-    @Bind(R.id.player_thumbnail)
-    ImageView thumbnail;
-    @Bind(R.id.player_tv_total)
-    TextView totalTime;
     @Bind(R.id.player_tv_played)
     TextView playedTime;
     @Bind(R.id.player_sound_seekbar)
     SeekBar volumeBar;
 
-    private int mediaFileLengthInMilliseconds;
-    private final Handler handler = new Handler();
+    public static final Handler handler = new Handler();
     Context mContext;
 
     public static TextView playingTitle;
     public static TextView playingSubtitle;
     public static ImageButton playBtn;
+    public static SeekArc timeProgressBar;
+
+    public static TextView totalTime;
+    public static ImageView thumbnail;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
         ButterKnife.bind(this);
+        Logger.init("asdf");
         mContext = this;
         toolbarTitle.setText("지금 재생중");
-        if(PlayService.mediaPlayer == null)
-            return;
+
+        initLayout();
         initProgressBar();
         initVolCtrl();
-        playerSet();
+
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        if (Intent.ACTION_VIEW.equals(action)) {
+            String url = intent.getDataString();
+            String videoId = YouTubeClient.extractYTId(url);
+            if(url != null && videoId != null && !videoId.equals("")){
+                new MusicDataFromUrl(url, videoId).execute();
+            }else{
+                Toast.makeText(mContext, "재생 불가능한 url 입니다.",Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+    private void initLayout() {
+        playBtn = (ImageButton) findViewById(R.id.player_control_play);
+        playingTitle = (TextView) findViewById(R.id.player_tv_title);
+        playingSubtitle = (TextView) findViewById(R.id.player_tv_subtitle);
+        timeProgressBar = (SeekArc) findViewById(R.id.player_seek);
+        thumbnail = (ImageView) findViewById(R.id.player_thumbnail);
+        totalTime = (TextView) findViewById(R.id.player_tv_total);
+        if(PlayService.mediaPlayer != null && PlayService.nowPlaying != null){
+            PlayService.updateState(new Pair<>(PlayService.nowPlaying.getTitle(), PlayService.nowPlaying.getUploader()));
+        }
     }
 
+    // 프로그레스바의 초기화
     private void initProgressBar() {
         timeProgressBar.setMax(100);
         timeProgressBar.setProgress(0);
         timeProgressBar.setOnTouchListener(this);
         timeProgressBar.setOnSeekArcChangeListener(this);
         timeProgressBar.setSecondaryProgress(0);
+        PlayService.updateTimePrg();
     }
-
+    // 볼륨 컨트롤러 초기화 & 리스너
     private void initVolCtrl() {
         try{
             final AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -99,29 +132,6 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
         }
     }
 
-    private void playerSet(){
-        playBtn = (ImageButton) findViewById(R.id.player_control_play);
-        playingTitle = (TextView) findViewById(R.id.player_tv_title);
-        playingSubtitle = (TextView) findViewById(R.id.player_tv_subtitle);
-        if(PlayService.mediaPlayer != null)
-            playBtn.setImageResource((PlayService.mediaPlayer.isPlaying())?R.drawable.ic_pause: R.drawable.ic_play);
-        Glide.with(mContext).load(PlayService.nowPlaying.getThumbnail()).asBitmap().placeholder(R.drawable.bg_default_album).into(thumbnail);
-        mediaFileLengthInMilliseconds = PlayService.mediaPlayer.getDuration(); // gets the song length in milliseconds from URL
-        timeProgressBar.setMax(mediaFileLengthInMilliseconds/1000);
-        timeProgressBar.setOnTouchListener(this);
-        timeProgressBar.setOnSeekArcChangeListener(this);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                totalTime.setText(parseTime(mediaFileLengthInMilliseconds));
-                playingTitle.setText(PlayService.nowPlaying.getTitle());
-                playingTitle.setSelected(true);
-                playingSubtitle.setText(PlayService.nowPlaying.getUploader());
-            }
-        });
-        primarySeekBarProgressUpdater();
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == android.R.id.home){
@@ -130,18 +140,23 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
         return super.onOptionsItemSelected(item);
     }
 
-    private void primarySeekBarProgressUpdater() {
-        if(!timeProgressBar.isTouching()) {
-            timeProgressBar.setProgress((int) (((float) PlayService.mediaPlayer.getCurrentPosition() / 1000))); // This math construction give a percentage of "was playing"/"song length"
-            timeProgressBar.setSecondaryProgress(PlayService.buffer);
-        }
+    public static void primarySeekBarProgressUpdater() {
+        if(timeProgressBar == null)return;
         if (PlayService.mediaPlayer != null) {
+            if(!timeProgressBar.isTouching()) {
+                int progress = (int) (((float) PlayService.mediaPlayer.getCurrentPosition() / 1000));
+                timeProgressBar.setProgress((progress > 0)? progress : 0);
+                timeProgressBar.setSecondaryProgress(PlayService.buffer);
+            }
             Runnable notification = new Runnable() {
                 public void run() {
                     primarySeekBarProgressUpdater();
                 }
             };
             handler.postDelayed(notification,1000);
+        }else{
+            timeProgressBar.setProgress(0);
+            timeProgressBar.setSecondaryProgress(0);
         }
     }
     @Override
@@ -156,24 +171,10 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
         }
         return false;
     }
-    public String parseTime(long ms){
-        long millis = ms;
-        if(millis >= 3600000){
-            String time = String.format("%d:%02d:%02d",
-                    TimeUnit.MILLISECONDS.toHours(millis) - TimeUnit.HOURS.toHours(TimeUnit.MILLISECONDS.toDays(millis)),
-                    TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)),
-                    TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
-            return time;
-        }else{
-            String time = String.format("%02d:%02d",
-                    TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)),
-                    TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
-            return time;
-        }
-    }
     @Override
     public void onProgressChanged(SeekArc seekArc, int progress, boolean fromUser) {
-        playedTime.setText(parseTime(PlayService.mediaPlayer.getCurrentPosition()));
+        if(PlayService.mediaPlayer != null)
+            playedTime.setText(PlayUtil.parseTime(PlayService.mediaPlayer.getCurrentPosition()));
     }
     @Override
     public void onStartTrackingTouch(SeekArc seekArc) {
@@ -197,5 +198,36 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
     }
     @OnClick(R.id.toolbar_back) void back(){
         onBackPressed();
+    }
+    class MusicDataFromUrl extends AsyncTask<String, String, String> {
+        String url, videoId;
+        MusicData mData;
+        public MusicDataFromUrl(String url, String videoId){
+            this.url = url;
+            this.videoId = videoId;
+        }
+        @Override
+        protected String doInBackground(String... params) {
+            Document doc = null;
+            try {
+                doc = Jsoup.connect(url).userAgent("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36").get();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Logger.init("asdf");
+            Logger.i(doc.toString());
+            String title = doc.select("span.watch-title").text();
+            String uploader = doc.select("div.yt-user-info").text();
+            String thumbnail = "https://i.ytimg.com/vi/" + videoId + "/mqdefault.jpg";
+            Logger.d(thumbnail);
+            mData = new MusicData(title, videoId, uploader, thumbnail);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            PlayUtil.runService(mContext, mData, true);
+        }
     }
 }

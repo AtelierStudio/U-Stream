@@ -30,6 +30,13 @@ public class MusicData{
         this.thumbnail = sData.getThumbnail();
     }
 
+    public MusicData(String title, String videoId, String uploader, String thumbnail) {
+        this.title = title;
+        this.videoId = videoId;
+        this.uploader = uploader;
+        this.thumbnail = thumbnail;
+    }
+
     public int getId() {
         return id;
     }

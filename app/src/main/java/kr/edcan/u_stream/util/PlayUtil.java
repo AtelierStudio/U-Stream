@@ -3,7 +3,7 @@ package kr.edcan.u_stream.util;
 import android.content.Context;
 import android.content.Intent;
 
-import com.orhanobut.logger.Logger;
+import java.util.concurrent.TimeUnit;
 
 import kr.edcan.u_stream.PlayService;
 import kr.edcan.u_stream.model.MusicData;
@@ -31,12 +31,25 @@ public class PlayUtil {
         Intent service = new Intent(context, PlayService.class);
         service.setAction(STOPFOREGROUND_ACTION);
         context.startService(service);
-        Logger.d("STOP FOREGROUND SERVICE");
     }
     public static void resumeForeground(Context context){
         Intent service = new Intent(context, PlayService.class);
         service.setAction(RESUMEFOREGROUND_ACTION);
         context.startService(service);
-        Logger.d("RESUME FOREGROUND SERVICE");
+    }
+    public static String parseTime(long ms){
+        long millis = ms;
+        if(millis >= 3600000){
+            String time = String.format("%d:%02d:%02d",
+                    TimeUnit.MILLISECONDS.toHours(millis) - TimeUnit.HOURS.toHours(TimeUnit.MILLISECONDS.toDays(millis)),
+                    TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)),
+                    TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
+            return time;
+        }else{
+            String time = String.format("%02d:%02d",
+                    TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)),
+                    TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
+            return time;
+        }
     }
 }

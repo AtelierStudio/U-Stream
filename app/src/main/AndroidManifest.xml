@@ -21,7 +21,17 @@
             </intent-filter>
         </activity>
         <activity android:name=".SearchActivity"/>
-        <activity android:name=".PlayerActivity"/>
+        <activity android:name=".PlayerActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:host="youtube.com"/>
+                <data android:host="youtu.be"/>
+                <data android:scheme="http"/>
+                <data android:scheme="https"/>
+            </intent-filter>
+        </activity>
         <service android:name=".PlayService"/>
     </application>
 </manifest>

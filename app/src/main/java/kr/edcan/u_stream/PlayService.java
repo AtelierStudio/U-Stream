@@ -184,7 +184,17 @@ public class PlayService extends Service {
 
         @Override
         protected void onPostExecute(String s) {
+            updateTimePrg();
             super.onPostExecute(s);
+        }
+    }
+
+
+    public static void updateTimePrg() {
+        PlayerActivity.primarySeekBarProgressUpdater();
+        if(PlayerActivity.timeProgressBar != null && PlayerActivity.totalTime != null && mediaPlayer != null) {
+            PlayerActivity.timeProgressBar.setMax(mediaPlayer.getDuration() / 1000);
+            PlayerActivity.totalTime.setText(PlayUtil.parseTime(mediaPlayer.getDuration()));
         }
     }
     // 3군데의 UI 업데이트
@@ -207,6 +217,7 @@ public class PlayService extends Service {
             if(!PlayerActivity.playingTitle.getText().equals(info.first)) {
                 PlayerActivity.playingTitle.setText(info.first);
                 PlayerActivity.playingTitle.setSelected(true);
+                Glide.with(mContext).load(nowPlaying.getThumbnail()).asBitmap().placeholder(R.drawable.bg_default_album).into(PlayerActivity.thumbnail);
             }
             PlayerActivity.playingSubtitle.setText(info.second);
             PlayerActivity.playBtn.setImageResource((mediaPlayer.isPlaying())?R.drawable.ic_pause: R.drawable.ic_play);
@@ -217,6 +228,7 @@ public class PlayService extends Service {
                 PlayUtil.resumeForeground(mContext);
             }else{
                 PlayUtil.stopForeground(mContext);
+                Logger.d("STOP FOREGROUND SERVICE");
             }
         }
     }

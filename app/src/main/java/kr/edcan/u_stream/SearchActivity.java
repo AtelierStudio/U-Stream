@@ -69,8 +69,6 @@ public class SearchActivity extends AppCompatActivity {
         DesignUtil.changeTabsFont(mContext, searchTab);
         searchPager.setAdapter(searchResultAdapter);
         searchTab.setViewPager(searchPager);
-        search.setText("mafumafu");
-        performSearch(search);
     }
 
     @OnClick(R.id.toolbar_search_btn)
@@ -98,7 +96,7 @@ public class SearchActivity extends AppCompatActivity {
                                 musicItem.getJSONObject("id").getString("videoId"),
                                 snippet.getString("title"),
                                 snippet.getString("description"),
-                                snippet.getJSONObject("thumbnails").getJSONObject("medium").getString("url"),
+                                getThumb(snippet),
                                 snippet.getString("channelTitle")
                         );
                         searchMusics.add(data);
@@ -118,7 +116,7 @@ public class SearchActivity extends AppCompatActivity {
                                         listItem.getJSONObject("id").getString("playlistId"),
                                         snippet.getString("title"),
                                         snippet.getString("description"),
-                                        (snippet.has("thumbnails"))?snippet.getJSONObject("thumbnails").getJSONObject("medium").getString("url"):"",
+                                        getThumb(snippet),
                                         snippet.getString("channelTitle")
                                 );
                                 searchLists.add(data);
@@ -136,6 +134,19 @@ public class SearchActivity extends AppCompatActivity {
                         DialogUtil.showDialog(mContext, "검색 실패", "검색 중 오류가 발생하였습니다.\n다시 시도해 주세요.", DialogUtil.Type.POS);
                     }
                 });
+            }
+
+            private String getThumb(JSONObject snippet) throws JSONException {
+                String result = "";
+                JSONObject jsonObject = snippet.getJSONObject("thumbnails");
+                if(jsonObject.has("high") && !jsonObject.isNull("high")){
+                    result = jsonObject.getJSONObject("high").getString("url");
+                }else if(jsonObject.has("medium") && !jsonObject.isNull("medium")){
+                    result = jsonObject.getJSONObject("medium").getString("url");
+                }else if(jsonObject.has("default") && !jsonObject.isNull("high")){
+                    result = jsonObject.getJSONObject("default").getString("url");
+                }
+                return result;
             }
 
             @Override
