@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.Space;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Pair;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -80,7 +81,7 @@ public class MainActivity extends AppCompatActivity{
                 PlayUtil.runService(this, new MusicData(realm.where(RM_MusicData.class).findFirst()), false);
             }
         }else{
-            PlayService.setInfo();
+            PlayService.updateState(new Pair<>(PlayService.nowPlaying.getTitle(), PlayService.nowPlaying.getUploader()));
         }
     }
     private void initBtmBar() {
@@ -110,7 +111,7 @@ public class MainActivity extends AppCompatActivity{
         super.onResume();
         adapter.notifyDataSetChanged();
         if(PlayService.mediaPlayer != null && PlayService.nowPlaying != null){
-            PlayService.setInfo();
+            PlayService.updateState(new Pair<>(PlayService.nowPlaying.getTitle(), PlayService.nowPlaying.getUploader()));
         }
     }
 
