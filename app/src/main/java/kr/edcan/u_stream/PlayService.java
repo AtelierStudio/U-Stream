@@ -1,6 +1,7 @@
 package kr.edcan.u_stream;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -39,6 +40,7 @@ public class PlayService extends Service {
     public static MusicData nowPlaying;
     public static boolean playable = false;
     public static Notification notification;
+    public static NotificationManager manager;
     public static long beforeEvent;
     public static  Handler handler;
     public static String rawUrl = "https://www.youtube.com/watch?v=";
@@ -52,6 +54,7 @@ public class PlayService extends Service {
         mContext = this;
         handler = new Handler();
         notification = new Notification(R.drawable.ic_noti, "μ'Stream", System.currentTimeMillis());
+        manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
     @Override
@@ -64,12 +67,23 @@ public class PlayService extends Service {
             i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
             PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
-            notification.flags = Notification.FLAG_ONGOING_EVENT;
             notification.contentIntent = pi;
             final RemoteViews views = new RemoteViews(this.getPackageName(), R.layout.content_notification);
             notification.contentView = views;
             new getPlayUrlSync((intent == null) ? false : intent.getBooleanExtra("isStart", false)).execute();
-            startForeground(NOTIFICATION_NUM,notification);
+            notification.flags = Notification.FLAG_AUTO_CANCEL;
+            manager.notify(NOTIFICATION_NUM, notification);
+        }else if (intent.getAction().equals(PlayUtil.STOPFOREGROUND_ACTION)) {
+            if(notification != null) {
+                stopForeground(false);
+                notification.flags = Notification.FLAG_AUTO_CANCEL;
+                manager.notify(NOTIFICATION_NUM, notification);
+            }
+        }else if (intent.getAction().equals(PlayUtil.RESUMEFOREGROUND_ACTION)) {
+            if(notification != null) {
+                notification.flags = Notification.FLAG_ONGOING_EVENT;
+                startForeground(NOTIFICATION_NUM, notification);
+            }
         }
         return super.onStartCommand(intent, flags, startId);
     }
@@ -98,8 +112,7 @@ public class PlayService extends Service {
 
         private void updateLoading() {
             playable = false;
-            setStatus(new Pair<>("음원 불러오는 중...",""));
-            notification.flags = Notification.FLAG_AUTO_CANCEL;
+            setStatus(new Pair<>(nowPlaying.getTitle(),"불러오는 중..."));
         }
 
         @Override
@@ -208,6 +221,8 @@ public class PlayService extends Service {
         RemoteViews rv = notification.contentView;
         rv.setTextViewText(R.id.notify_title, info.first);
         rv.setTextViewText(R.id.notify_subtitle, info.second);
+        NotificationTarget notificationTarget = new NotificationTarget(mContext,rv,R.id.notify_thumb,notification,NOTIFICATION_NUM);
+        Glide.with(mContext).load(nowPlaying.getThumbnail()).asBitmap().placeholder(R.drawable.bg_default_album).into(notificationTarget);
         if(MainActivity.playingTitle != null && MainActivity.playingSubtitle != null){
             MainActivity.playingTitle.setText(info.first);
             MainActivity.playingSubtitle.setText(info.second);
@@ -219,15 +234,18 @@ public class PlayService extends Service {
             }
             PlayerActivity.playingSubtitle.setText(info.second);
         }
+        if(mediaPlayer != null){
+            if(mediaPlayer.isPlaying()){
+                PlayUtil.resumeForeground(mContext);
+            }else{
+                PlayUtil.stopForeground(mContext);
+            }
+        }
     }
 
     private static void setNotify() {
         RemoteViews rv = notification.contentView;
         rv.setImageViewResource(R.id.notify_play, (mediaPlayer.isPlaying())?R.drawable.selector_notify_pause: R.drawable.selector_notify_play);
-        notification.flags = (mediaPlayer.isPlaying())?Notification.FLAG_ONGOING_EVENT: Notification.FLAG_AUTO_CANCEL;
-        NotificationTarget notificationTarget = new NotificationTarget(mContext,rv,R.id.notify_thumb,notification,NOTIFICATION_NUM);
-        Glide.with(mContext).load(nowPlaying.getThumbnail()).asBitmap().into(notificationTarget);
-
         Intent intent_ = new Intent("kr.edcan.ustream.control");
         PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent_,
                 PendingIntent.FLAG_UPDATE_CURRENT);
