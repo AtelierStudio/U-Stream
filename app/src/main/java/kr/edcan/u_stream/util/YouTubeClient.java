@@ -25,14 +25,29 @@ public class YouTubeClient {
     public static void search(RequestParams params, AsyncHttpResponseHandler responseHandler) {
         client.get(BASE_URL + "/search", params, responseHandler);
     }
-
     public static String extractYTId(String ytUrl) {
-        String pattern = "(?<=watch\\?v=|/videos/|embed\\/|youtu.be\\/|\\/v\\/|\\/e\\/|watch\\?v%3D|watch\\?feature=player_embedded&v=|%2Fvideos%2F|embed%\u200C\u200B2F|youtu.be%2F|%2Fv%2F)[^#\\&\\?\\n]*";
-        Pattern compiledPattern = Pattern.compile(pattern);
-        Matcher matcher = compiledPattern.matcher(ytUrl);
-        if (matcher.find()) {
-            return matcher.group();
+        String vId = null;
+        Pattern pattern = Pattern.compile(
+                "^https?://.*(?:youtu.be/|v/|u/\\w/|embed/|watch?v=)([^#&?]*).*$",
+                Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(ytUrl);
+        if (matcher.matches()){
+            vId = matcher.group(1);
         }
-        return null;
+        if (vId == null && ytUrl.contains("v=")){
+            String after = ytUrl.split("v=")[1];
+            if(after.contains("#") || after.contains("?") || after.contains("&")){
+                pattern = Pattern.compile(
+                        "v=(.*?)[&|#|?]",
+                        Pattern.CASE_INSENSITIVE);
+                matcher = pattern.matcher(ytUrl);
+                if (matcher.matches()){
+                    vId = matcher.group(1);
+                }
+            }else{
+                vId = after;
+            }
+        }
+        return vId;
     }
 }

@@ -218,7 +218,7 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
             Logger.i(doc.toString());
             String title = doc.select("span.watch-title").text();
             String uploader = doc.select("div.yt-user-info").text();
-            String thumbnail = "https://i.ytimg.com/vi/" + videoId + "/mqdefault.jpg";
+            String thumbnail = "https://i.ytimg.com/vi/" + videoId + "/maxresdefault.jpg";
             Logger.d(thumbnail);
             mData = new MusicData(title, videoId, uploader, thumbnail);
             return null;
