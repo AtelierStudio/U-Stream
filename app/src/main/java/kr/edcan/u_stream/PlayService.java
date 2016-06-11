@@ -13,6 +13,7 @@ import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 import android.util.Pair;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -24,7 +25,15 @@ import com.orhanobut.logger.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 
 import kr.edcan.u_stream.model.MusicData;
 import kr.edcan.u_stream.util.PlayUtil;
@@ -174,6 +183,8 @@ public class PlayService extends Service {
         @Override
         protected String doInBackground(String... params) {
             try {
+//                fileUrl(url, "/tmp.mp3", mContext.getFilesDir().getAbsolutePath());
+//                mediaPlayer.setDataSource(mContext.getFilesDir() + "/tmp.mp3");
                 mediaPlayer.setDataSource(url);
                 mediaPlayer.prepare();
             } catch (IOException e) {
@@ -186,6 +197,67 @@ public class PlayService extends Service {
         protected void onPostExecute(String s) {
             updateTimePrg();
             super.onPostExecute(s);
+        }
+
+        public static void fileUrl(String fAddress, String localFileName,String destinationDir) {
+            OutputStream outStream = null;
+            URLConnection uCon = null;
+            HttpURLConnection mHttpCon;
+            InputStream is = null;
+            int len = 0;
+            try {
+                URL url;
+                byte[] buf;
+                int ByteRead, ByteWritten = 0;
+                url = new URL(fAddress);
+                File file = new File(destinationDir + localFileName);
+                if(file.exists()){
+                    file.delete();
+                }
+                outStream = new BufferedOutputStream(new FileOutputStream(
+                        destinationDir + localFileName));
+                try {
+                    mHttpCon = (HttpURLConnection) url.openConnection();
+                    while (!url.toString().startsWith("https")) {
+                        mHttpCon.getResponseCode();
+                        url = mHttpCon.getURL();
+                        mHttpCon = (HttpURLConnection) url.openConnection();
+                    }
+                    is = mHttpCon.getInputStream();
+                    len = mHttpCon.getContentLength();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                buf = new byte[1024];
+                long latest = System.currentTimeMillis();
+                while ((ByteRead = is.read(buf)) != -1) {
+                    outStream.write(buf, 0, ByteRead);
+                    ByteWritten += ByteRead;
+                    final int finalLen = len;
+                    final int finalByteWritten = ByteWritten;
+                    if(latest < System.currentTimeMillis()-1000) {
+                        Log.e("asdf", "asdf");
+                        latest = System.currentTimeMillis();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateState(new Pair<>(nowPlaying.getTitle(),
+                                        String.format("%.2f", finalByteWritten /1000000f) + "Mb" +
+                                                " / " + String.format("%.2f", finalLen /1000000f) + "Mb"));
+                            }
+                        });
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    is.close();
+                    outStream.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -274,7 +346,7 @@ public class PlayService extends Service {
         PlayService.nowPlaying = nowPlaying;
     }
 
-    private void runOnUiThread(Runnable runnable) {
+    public static void runOnUiThread(Runnable runnable) {
         handler.post(runnable);
     }
 }
