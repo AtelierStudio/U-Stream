@@ -33,6 +33,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
+import at.huber.youtubeExtractor.Meta;
 import at.huber.youtubeExtractor.YouTubeUriExtractor;
 import at.huber.youtubeExtractor.YtFile;
 import kr.edcan.u_stream.model.MusicData;
@@ -101,15 +102,18 @@ public class PlayService extends Service {
             @Override
             public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
                 if (ytFiles != null) {
-                    int itag = ytFiles.keyAt((ytFiles.size() > 4)?ytFiles.size()-4: ytFiles.size()-1);
-                    String downloadUrl = ytFiles.get(itag).getUrl();
-                    Logger.e(ytFiles.size() + "/" +downloadUrl);
-                    String links = "";
+                    int maxBitrate = 0;
+                    String link = "";
                     for(int i = 0 ; i < ytFiles.size() ; i++){
-                        links += ytFiles.get(ytFiles.keyAt(i)).getUrl() + "\n";
+                        Meta m = ytFiles.get(ytFiles.keyAt(i)).getMeta();
+                        if(m.getExt().contains("webm")){
+                            if(maxBitrate < m.getAudioBitrate()){
+                                link = ytFiles.get(ytFiles.keyAt(i)).getUrl();
+                                maxBitrate = m.getAudioBitrate();
+                            }
+                        }
                     }
-                    Logger.e(links);
-                    playSet(downloadUrl, isStart);
+                    playSet(link, isStart);
                 } else {
                     Toast.makeText(mContext, "죄송합니다.\n재생할 수 없는 영상입니다.", Toast.LENGTH_SHORT).show();
                 }
