@@ -124,10 +124,20 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
         }
     }
 
-    @OnClick(R.id.player_control_play) void playControl(View v){
-        if(PlayService.playable) {
-            PlayService.doPlay();
-        }else{
+    @OnClick({R.id.player_control_play, R.id.player_control_rewind, R.id.player_control_forward}) void playControl(View v){
+        if (PlayService.playable) {
+            switch (v.getId()) {
+                case R.id.player_control_play:
+                    PlayService.doPlay();
+                    break;
+                case R.id.player_control_rewind:
+                    PlayUtil.playOther(this, false);
+                    break;
+                case R.id.player_control_forward:
+                    PlayUtil.playOther(this, true);
+                    break;
+            }
+        } else {
             //준비중
         }
     }

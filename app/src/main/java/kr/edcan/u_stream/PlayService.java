@@ -33,6 +33,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 
 import at.huber.youtubeExtractor.Meta;
 import at.huber.youtubeExtractor.YouTubeUriExtractor;
@@ -49,6 +50,8 @@ public class PlayService extends Service {
     public static final int NOTIFICATION_NUM = 3939;
     public static MediaPlayer mediaPlayer;
     public static MusicData nowPlaying;
+    public static ArrayList<Integer> playingList = new ArrayList<>();
+    public static int INDEX = 0;
     public static boolean playable = false;
     public static Notification notification;
     public static NotificationManager manager;
@@ -166,6 +169,7 @@ public class PlayService extends Service {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
                     updateState(new Pair<>(nowPlaying.getTitle(), nowPlaying.getUploader()));
+                    PlayUtil.playOther(mContext, true); // 한곡재생이라면 여기서 다시 프로그레스를 0으로
                 }
             });
         }
