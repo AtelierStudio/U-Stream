@@ -2,6 +2,7 @@ package kr.edcan.u_stream;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.Space;
@@ -12,6 +13,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.orhanobut.logger.Logger;
 
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import es.dmoral.prefs.Prefs;
 import io.realm.Realm;
 import kr.edcan.u_stream.adapter.MainAdapter;
 import kr.edcan.u_stream.model.MusicData;
@@ -77,11 +80,14 @@ public class MainActivity extends AppCompatActivity{
         });
         Realm realm = Realm.getInstance(this);
         if(PlayService.mediaPlayer == null) {
-            if (realm.where(RM_MusicData.class).findFirst() != null) {
-                PlayUtil.runService(this, new MusicData(realm.where(RM_MusicData.class).findFirst()), false);
+            MusicData latest = new Gson().fromJson(Prefs.with(this).read("latestPlay"), MusicData.class);
+            if (latest != null) {
+                PlayUtil.runService(this, latest, false);
             }
         }else{
-            PlayService.updateState(new Pair<>(PlayService.nowPlaying.getTitle(), PlayService.nowPlaying.getUploader()));
+            if(PlayService.nowPlaying != null) {
+                PlayService.updateState(new Pair<>(PlayService.nowPlaying.getTitle(), PlayService.nowPlaying.getUploader()));
+            }
         }
     }
     private void initBtmBar() {

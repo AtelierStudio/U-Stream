@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.NotificationTarget;
+import com.google.gson.Gson;
 import com.orhanobut.logger.Logger;
 
 import java.io.BufferedOutputStream;
@@ -36,6 +37,7 @@ import java.net.URLConnection;
 import at.huber.youtubeExtractor.Meta;
 import at.huber.youtubeExtractor.YouTubeUriExtractor;
 import at.huber.youtubeExtractor.YtFile;
+import es.dmoral.prefs.Prefs;
 import kr.edcan.u_stream.model.MusicData;
 import kr.edcan.u_stream.util.PlayUtil;
 
@@ -54,6 +56,7 @@ public class PlayService extends Service {
     public static  Handler handler;
     public static Context mContext;
     public static int buffer = 0;
+    public static Gson gson = new Gson();
     @Override
     public void onCreate() {
         super.onCreate();
@@ -127,6 +130,7 @@ public class PlayService extends Service {
     }
     // url 을 플레이어에 등록
     static void playSet(String url, final boolean isStart){
+        Prefs.with(mContext).write("latestPlay", gson.toJson(nowPlaying));
         Logger.e(url);
         new setSourceTask(url, isStart).execute();
     }
