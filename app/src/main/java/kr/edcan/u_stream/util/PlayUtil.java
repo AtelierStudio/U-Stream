@@ -24,7 +24,7 @@ public class PlayUtil {
             context.startService(service);
         }else{
             PlayService.setNowPlaying(musicData);
-            new PlayService.getPlayUrlSync(isStart).execute();
+            PlayService.getPlayUrlSync(isStart);
         }
     }
     public static void stopForeground(Context context){

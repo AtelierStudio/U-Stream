@@ -63,7 +63,7 @@
             seekarc:progressWidth="4dp"
             seekarc:startAngle="30"
             seekarc:sweepAngle="300"
-            seekarc:touchInside="true" />
+            seekarc:touchInside="false" />
         <LinearLayout
             android:orientation="horizontal"
             android:layout_centerHorizontal="true"

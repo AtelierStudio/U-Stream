@@ -15,15 +15,13 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.util.Pair;
+import android.util.SparseArray;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.NotificationTarget;
 import com.orhanobut.logger.Logger;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -35,9 +33,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
+import at.huber.youtubeExtractor.YouTubeUriExtractor;
+import at.huber.youtubeExtractor.YtFile;
 import kr.edcan.u_stream.model.MusicData;
 import kr.edcan.u_stream.util.PlayUtil;
-import kr.edcan.u_stream.util.YouTubeClient;
 
 /**
  * Created by LNTCS on 2016-03-22.
@@ -52,7 +51,6 @@ public class PlayService extends Service {
     public static NotificationManager manager;
     public static long beforeEvent;
     public static  Handler handler;
-    public static String rawUrl = "https://www.youtube.com/watch?v=";
     public static Context mContext;
     public static int buffer = 0;
     @Override
@@ -70,7 +68,7 @@ public class PlayService extends Service {
         if(intent==null) return 0;
         if (intent.getAction().equals(PlayUtil.STARTFOREGROUND_ACTION)) {
             makeNotification();
-            new getPlayUrlSync((intent == null) ? false : intent.getBooleanExtra("isStart", false)).execute();
+            getPlayUrlSync((intent == null) ? false : intent.getBooleanExtra("isStart", false));
             manager.notify(NOTIFICATION_NUM, notification);
         }else if (intent.getAction().equals(PlayUtil.STOPFOREGROUND_ACTION)) {
             if(notification != null) {
@@ -97,46 +95,31 @@ public class PlayService extends Service {
     }
 
     // youtube url에서 영상 url을 반환시킨뒤 playSet 호출
-    public static class getPlayUrlSync extends AsyncTask<String,String,String> {
-        boolean isStart;
-        public getPlayUrlSync(boolean isStart){
-            this.isStart = isStart;
-        }
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            updateLoading();
-        }
-
-        private void updateLoading() {
-            playable = false;
-            updateState(new Pair<>(nowPlaying.getTitle(),"불러오는 중..."));
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-            Logger.e(YouTubeClient.API_URL + rawUrl + nowPlaying.getVideoId());
-            String result="";
-            Document doc = null;
-            try {
-                doc = Jsoup.connect(YouTubeClient.API_URL + rawUrl + nowPlaying.getVideoId()).get();
-                return YouTubeClient.REDIRECT_URL + doc.select("a#downloadMP4").get(0).attr("href");
-            } catch (IOException e) {
-                e.printStackTrace();
+    public static void getPlayUrlSync(final boolean isStart){
+        updateLoading();
+        final YouTubeUriExtractor ytEx = new YouTubeUriExtractor(mContext) {
+            @Override
+            public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
+                if (ytFiles != null) {
+                    int itag = ytFiles.keyAt((ytFiles.size() > 4)?ytFiles.size()-4: ytFiles.size()-1);
+                    String downloadUrl = ytFiles.get(itag).getUrl();
+                    Logger.e(ytFiles.size() + "/" +downloadUrl);
+                    String links = "";
+                    for(int i = 0 ; i < ytFiles.size() ; i++){
+                        links += ytFiles.get(ytFiles.keyAt(i)).getUrl() + "\n";
+                    }
+                    Logger.e(links);
+                    playSet(downloadUrl, isStart);
+                } else {
+                    Toast.makeText(mContext, "죄송합니다.\n재생할 수 없는 영상입니다.", Toast.LENGTH_SHORT).show();
+                }
             }
-            return "";
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            if(s.equals("")){
-                Toast.makeText(mContext, "죄송합니다.\n재생할 수 없는 영상입니다.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            Logger.e(s);
-            playSet(s, isStart);
-            super.onPostExecute(s);
-        }
+        };
+        ytEx.execute("https://www.youtube.com/watch?v=" + nowPlaying.getVideoId());
+    }
+    public static void updateLoading() {
+        playable = false;
+        updateState(new Pair<>(nowPlaying.getTitle(),"불러오는 중..."));
     }
     // url 을 플레이어에 등록
     static void playSet(String url, final boolean isStart){
@@ -277,7 +260,7 @@ public class PlayService extends Service {
         rv.setTextViewText(R.id.notify_subtitle, info.second);
         rv.setImageViewResource(R.id.notify_play, (mediaPlayer.isPlaying())? R.drawable.selector_notify_pause: R.drawable.selector_notify_play);
         NotificationTarget notificationTarget = new NotificationTarget(mContext,rv,R.id.notify_thumb,notification,NOTIFICATION_NUM);
-        Glide.with(mContext).load(nowPlaying.getThumbnail()).asBitmap().placeholder(R.drawable.bg_default_album).into(notificationTarget);
+        Glide.with(mContext).load(nowPlaying.getThumbnail()).asBitmap().placeholder(R.drawable.ic_notify_album).into(notificationTarget);
         // 메인화면 아래의 바
         if(MainActivity.playingTitle != null && MainActivity.playingSubtitle != null && MainActivity.playBtn != null){
             MainActivity.playBtn.setImageResource((mediaPlayer.isPlaying())?R.drawable.ic_btm_pause: R.drawable.ic_btm_play);
