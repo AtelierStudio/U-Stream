@@ -56,7 +56,6 @@ public class PlayService extends Service {
     public static  Handler handler;
     public static Context mContext;
     public static int buffer = 0;
-    public static Gson gson = new Gson();
     @Override
     public void onCreate() {
         super.onCreate();
@@ -130,7 +129,6 @@ public class PlayService extends Service {
     }
     // url 을 플레이어에 등록
     static void playSet(String url, final boolean isStart){
-        Prefs.with(mContext).write("latestPlay", gson.toJson(nowPlaying));
         Logger.e(url);
         new setSourceTask(url, isStart).execute();
     }

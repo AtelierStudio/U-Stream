@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity{
             MusicData latest = new Gson().fromJson(Prefs.with(this).read("latestPlay"), MusicData.class);
             if (latest != null) {
                 PlayUtil.runService(this, latest, false);
+//                PlayUtil.runService(this, new MusicData(realm.where(RM_MusicData.class).findFirst()), false);
             }
         }else{
             if(PlayService.nowPlaying != null) {

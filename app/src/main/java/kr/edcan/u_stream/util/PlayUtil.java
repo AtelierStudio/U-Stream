@@ -3,8 +3,11 @@ package kr.edcan.u_stream.util;
 import android.content.Context;
 import android.content.Intent;
 
+import com.google.gson.Gson;
+
 import java.util.concurrent.TimeUnit;
 
+import es.dmoral.prefs.Prefs;
 import kr.edcan.u_stream.PlayService;
 import kr.edcan.u_stream.model.MusicData;
 
@@ -16,6 +19,7 @@ public class PlayUtil {
     public static final String RESUMEFOREGROUND_ACTION = "kr.edcan.u_stream.action.resume";
     public static final String STOPFOREGROUND_ACTION = "kr.edcan.u_stream.action.stopforeground";
     public static void runService(Context context, MusicData musicData, boolean isStart){
+        Prefs.with(context).write("latestPlay", new Gson().toJson(musicData));
         PlayService.setNowPlaying(musicData);
         if(PlayService.mediaPlayer == null){
             Intent service = new Intent(context, PlayService.class);
