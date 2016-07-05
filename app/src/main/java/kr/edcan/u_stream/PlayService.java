@@ -128,7 +128,7 @@ public class PlayService extends Service {
     }
     public static void updateLoading() {
         playable = false;
-        updateState(new Pair<>(nowPlaying.getTitle(),"불러오는 중..."));
+        updateState(new Pair<>(nowPlaying.getTitle(), "불러오는 중..."));
     }
     // url 을 플레이어에 등록
     static void playSet(String url, final boolean isStart){
@@ -309,31 +309,52 @@ public class PlayService extends Service {
         RemoteViews views = new RemoteViews(mContext.getPackageName(), R.layout.content_notification);
         notification.contentView = views;
         notification.flags = Notification.FLAG_AUTO_CANCEL;
-        views.setImageViewResource(R.id.notify_play, (mediaPlayer.isPlaying())?R.drawable.selector_notify_pause: R.drawable.selector_notify_play);
+        views.setImageViewResource(R.id.notify_play, (mediaPlayer.isPlaying()) ? R.drawable.selector_notify_pause : R.drawable.selector_notify_play);
 
         Intent i = new Intent(mContext, PlayerActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pi = PendingIntent.getActivity(mContext, 0, i, 0);
         notification.contentIntent = pi;
+        setIntent(views);
+    }
 
-        Intent intent_ = new Intent("kr.edcan.ustream.control");
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent_,
+    private static void setIntent(RemoteViews views) {
+        Intent playIntent = new Intent("kr.edcan.ustream.control.play");
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, playIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
         views.setOnClickPendingIntent(R.id.notify_play, pendingIntent);
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("kr.edcan.ustream.control");
+        intentFilter.addAction("kr.edcan.ustream.control.play");
         mContext.registerReceiver( new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 long currentEvent = System.currentTimeMillis();
-                if(beforeEvent < currentEvent - 100) {
+                if(beforeEvent < currentEvent - 100 && playable) {
                     doPlay();
                 }
                 beforeEvent = currentEvent;
             }
         }, intentFilter);
+
+        Intent forwardIntent = new Intent("kr.edcan.ustream.control.forward");
+        PendingIntent pendingIntentF = PendingIntent.getBroadcast(mContext, 0, forwardIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        views.setOnClickPendingIntent(R.id.notify_next, pendingIntentF);
+        IntentFilter intentFilterF = new IntentFilter();
+        intentFilterF.addAction("kr.edcan.ustream.control.forward");
+        mContext.registerReceiver( new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                long currentEvent = System.currentTimeMillis();
+                if(beforeEvent < currentEvent - 100 && playable) {
+                    PlayUtil.playOther(mContext, true);
+                }
+                beforeEvent = currentEvent;
+            }
+        }, intentFilterF);
     }
+
     // nowPlaying 값 대입
     public static void setNowPlaying(MusicData nowPlaying) {
         PlayService.nowPlaying = nowPlaying;
