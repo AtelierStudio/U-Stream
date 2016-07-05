@@ -161,12 +161,15 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
     }
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        if(v.getId() == R.id.player_seek){
-            /** Seekbar onTouch event handler. Method which seeks MediaPlayer to seekBar primary progress position*/
-            if(PlayService.mediaPlayer != null){
-                SeekArc sb = (SeekArc) v;
-                int playPositionInMillisecconds = sb.getProgress() * 1000;
-                PlayService.mediaPlayer.seekTo(playPositionInMillisecconds);
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            if (v.getId() == R.id.player_seek) {
+                /** Seekbar onTouch event handler. Method which seeks MediaPlayer to seekBar primary progress position*/
+                if (PlayService.mediaPlayer != null) {
+                    SeekArc sb = (SeekArc) v;
+                    int playPositionInMillisecconds = sb.getProgress() * 1000;
+                    PlayService.mediaPlayer.seekTo(playPositionInMillisecconds);
+                    Logger.e("touched :" + playPositionInMillisecconds);
+                }
             }
         }
         return false;

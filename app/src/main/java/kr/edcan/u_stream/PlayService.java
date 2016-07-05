@@ -104,10 +104,10 @@ public class PlayService extends Service {
                 if (ytFiles != null) {
                     int maxBitrate = 0;
                     String link = "";
-                    for(int i = 0 ; i < ytFiles.size() ; i++){
+                    for(int i = 0 ; i < ytFiles.size() ; i++) {
                         Meta m = ytFiles.get(ytFiles.keyAt(i)).getMeta();
-                        if(m.getExt().contains("webm")){
-                            if(maxBitrate < m.getAudioBitrate()){
+                        if (m.getExt().contains("webm") && m.getHeight() > 0) {
+                            if (maxBitrate < m.getAudioBitrate()) {
                                 link = ytFiles.get(ytFiles.keyAt(i)).getUrl();
                                 maxBitrate = m.getAudioBitrate();
                             }
