@@ -22,9 +22,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 import kr.edcan.u_stream.R;
 import kr.edcan.u_stream.adapter.PlayListSpinnerAdapter;
+import kr.edcan.u_stream.adapter.PlaylistListAdapter;
+import kr.edcan.u_stream.model.MusicData;
 import kr.edcan.u_stream.model.RM_MusicData;
 import kr.edcan.u_stream.model.RM_PlayListData;
 import kr.edcan.u_stream.model.SearchData;
@@ -35,6 +38,8 @@ import kr.edcan.u_stream.model.SearchData;
 public class DialogUtil {
     public static MaterialDialog mProgressDialog;
     static int selectListPos;
+    public static Realm realm;
+    public static RealmConfiguration realmConfig;
     public static void showProgressDialog(Context mContext) {
         if (mProgressDialog == null) {
             mProgressDialog = new MaterialDialog.Builder(mContext)
@@ -93,6 +98,8 @@ public class DialogUtil {
     static MaterialDialog addDlg;
 
     public static void selectPlayListDialog(final Context mContext, final SearchData data, final int type) {
+        realmConfig = new RealmConfiguration.Builder(mContext).build();
+        realm = Realm.getInstance(realmConfig);
         selectListPos = 0;
         boolean wrapInScrollView = true;
         addDlg = new MaterialDialog.Builder(mContext)
@@ -113,7 +120,7 @@ public class DialogUtil {
 
         Spinner spinner = (Spinner) view.findViewById(R.id.search_dialog_spinner);
         PlayListSpinnerAdapter spinnerAdapter = new PlayListSpinnerAdapter(mContext);
-        final Realm realm = Realm.getInstance(mContext);
+
         final RealmResults<RM_PlayListData> pList = realm.where(RM_PlayListData.class).findAll();
         for(RM_PlayListData pData : pList) {
             spinnerAdapter.addItem(pData.getTitle());
@@ -141,10 +148,10 @@ public class DialogUtil {
                     return;
                 }
                 RM_PlayListData pData = pList.get(selectListPos);
-                int musicId = realm.where(RM_MusicData.class).findAll().size() + 1;
+                int musicId = getNumberInt(realm.where(RM_MusicData.class).max("id")) + 1;
 
                 if(type == 0) {
-                    RM_MusicData mData = new RM_MusicData();
+                    final RM_MusicData mData = new RM_MusicData();
                     mData.setId(musicId);
                     mData.setTitle(data.getTitle());
                     mData.setPlayListId(pData.getId());
@@ -152,10 +159,12 @@ public class DialogUtil {
                     mData.setUploader(data.getUploader());
                     mData.setDescription(data.getDescription());
                     mData.setVideoId(data.getId());
-
-                    realm.beginTransaction();
-                    realm.copyToRealm(mData);
-                    realm.commitTransaction();
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            realm.copyToRealm(mData);
+                        }
+                    });
                     Toast.makeText(mContext, pData.getTitle() + "에 1곡이 추가되었습니다.", Toast.LENGTH_SHORT).show();
                 }else{
                     new getMusicsTask(mContext, data.getId(), pData.getId(), musicId, pData.getTitle()).execute();
@@ -165,6 +174,8 @@ public class DialogUtil {
     }
 
     public static void addPlayListDialog(final Context mContext, final SearchData data, final int type) {
+        realmConfig = new RealmConfiguration.Builder(mContext).build();
+        realm = Realm.getInstance(realmConfig);
         MaterialDialog mDlg = new MaterialDialog.Builder(mContext)
                 .title("재생목록 추가")
                 .titleColorRes(R.color.colorPrimary)
@@ -190,15 +201,14 @@ public class DialogUtil {
                             addPlayListDialog(mContext, data, type);
                         } else {
                             if (type == 0) {
-                                Realm realm = Realm.getInstance(mContext);
-                                int listId = realm.where(RM_PlayListData.class).findAll().size() + 1;
-                                int musicId = realm.where(RM_MusicData.class).findAll().size() + 1;
+                                int listId = getNumberInt(realm.where(RM_PlayListData.class).max("id")) + 1;
+                                int musicId = getNumberInt(realm.where(RM_MusicData.class).max("id")) + 1;
 
-                                RM_PlayListData pData = new RM_PlayListData();
+                                final RM_PlayListData pData = new RM_PlayListData();
                                 pData.setId(listId);
                                 pData.setTitle(input);
 
-                                RM_MusicData mData = new RM_MusicData();
+                                final RM_MusicData mData = new RM_MusicData();
                                 mData.setId(musicId);
                                 mData.setTitle(data.getTitle());
                                 mData.setPlayListId(listId);
@@ -206,25 +216,26 @@ public class DialogUtil {
                                 mData.setUploader(data.getUploader());
                                 mData.setDescription(data.getDescription());
                                 mData.setVideoId(data.getId());
-
-                                realm.beginTransaction();
-                                realm.copyToRealm(pData);
-                                realm.copyToRealm(mData);
-                                realm.commitTransaction();
-
+                                realm.executeTransaction(new Realm.Transaction() {
+                                    @Override
+                                    public void execute(Realm realm) {
+                                        realm.copyToRealm(pData);
+                                        realm.copyToRealm(mData);
+                                    }
+                                });
                                 Toast.makeText(mContext, input + "에 1곡이 추가되었습니다.", Toast.LENGTH_SHORT).show();
                             }else{
-                                Realm realm = Realm.getInstance(mContext);
-                                int listId = realm.where(RM_PlayListData.class).findAll().size() + 1;
-                                int musicId = realm.where(RM_MusicData.class).findAll().size() + 1;
-                                RM_PlayListData pData = new RM_PlayListData();
+                                int listId = getNumberInt(realm.where(RM_PlayListData.class).max("id")) + 1;
+                                int musicId = getNumberInt(realm.where(RM_MusicData.class).max("id")) + 1;
+                                final RM_PlayListData pData = new RM_PlayListData();
                                 pData.setId(listId);
                                 pData.setTitle(input);
-
-                                realm.beginTransaction();
-                                realm.copyToRealm(pData);
-                                realm.commitTransaction();
-
+                                realm.executeTransaction(new Realm.Transaction() {
+                                    @Override
+                                    public void execute(Realm realm) {
+                                        realm.copyToRealm(pData);
+                                    }
+                                });
                                 new getMusicsTask(mContext, data.getId(), listId, musicId, input).execute();
                             }
                         }
@@ -234,6 +245,42 @@ public class DialogUtil {
         DesignUtil.setFont(mContext, mDlg.getTitleView());
         DesignUtil.setFont(mContext, mDlg.getContentView());
         DesignUtil.setFont(mContext, mDlg.getInputEditText());
+        mDlg.show();
+    }
+
+    private static int getNumberInt(Number num) {
+        return (num != null)? num.intValue() : 0;
+    }
+
+    public static void deletePlayListDialog(final Context mContext, final MusicData data, String playlistTitle, final PlaylistListAdapter adapter) {
+        realmConfig = new RealmConfiguration.Builder(mContext).build();
+        realm = Realm.getInstance(realmConfig);
+        MaterialDialog mDlg = new MaterialDialog.Builder(mContext)
+                .title("곡 제거")
+                .titleColorRes(R.color.colorPrimary)
+                .content("'" + data.getTitle()+"'을(를) '" + playlistTitle + "'에서 제거합니다.")
+                .backgroundColorRes(R.color.lgt_background)
+                .positiveColorRes(R.color.colorPrimary)
+                .positiveText("확인")
+                .negativeColorRes(R.color.text_gray)
+                .negativeText("취소")
+                .widgetColorRes(R.color.colorPrimary)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                realm.where(RM_MusicData.class).equalTo("id", data.getId()).findFirst().deleteFromRealm();
+                            }
+                        });
+                        adapter.remove(data);
+                        //TODO 삭제후 현재곡일경우 다음곡으로
+                    }
+                })
+                .build();
+        DesignUtil.setFont(mContext, mDlg.getTitleView());
+        DesignUtil.setFont(mContext, mDlg.getContentView());
         mDlg.show();
     }
 
@@ -285,7 +332,7 @@ public class DialogUtil {
                     }
                     mData.setUploader(snippet.getString("channelTitle"));
                     mData.setDescription(snippet.getString("description"));
-                    mData.setVideoId(items.getJSONObject(i).getString("id"));
+                    mData.setVideoId(items.getJSONObject(i).getJSONObject("resourceId").getString("videoId"));
                     mList.add(mData);
                     musicId++;
                 }
@@ -301,14 +348,18 @@ public class DialogUtil {
         }
 
         @Override
-        protected void onPostExecute(ArrayList<RM_MusicData> mDatas) {
+        protected void onPostExecute(final ArrayList<RM_MusicData> mDatas) {
             super.onPostExecute(mDatas);
-            Realm realm = Realm.getInstance(mContext);
-            realm.beginTransaction();
-            for(RM_MusicData mData : mDatas){
-                realm.copyToRealm(mData);
-            }
-            realm.commitTransaction();
+            realmConfig = new RealmConfiguration.Builder(mContext).build();
+            realm = Realm.getInstance(realmConfig);
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    for(RM_MusicData mData : mDatas){
+                        realm.copyToRealm(mData);
+                    }
+                }
+            });
             hideProgressDialog();
             Toast.makeText(mContext, input + "에 "+ mDatas.size() +"곡이 추가되었습니다.", Toast.LENGTH_SHORT).show();
         }

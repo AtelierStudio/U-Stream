@@ -4,12 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.google.gson.Gson;
-import com.orhanobut.logger.Logger;
 
 import java.util.concurrent.TimeUnit;
 
 import es.dmoral.prefs.Prefs;
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 import kr.edcan.u_stream.PlayService;
 import kr.edcan.u_stream.model.MusicData;
@@ -23,8 +23,10 @@ public class PlayUtil {
     public static final String RESUMEFOREGROUND_ACTION = "kr.edcan.u_stream.action.resume";
     public static final String STOPFOREGROUND_ACTION = "kr.edcan.u_stream.action.stopforeground";
     public static Realm realm;
+    public static RealmConfiguration realmConfig;
     public static void runService(Context context, MusicData musicData, boolean isStart){
-        realm = Realm.getInstance(context);
+        realmConfig = new RealmConfiguration.Builder(context).build();
+        realm = Realm.getInstance(realmConfig);
         Prefs.with(context).write("latestPlay", new Gson().toJson(musicData));
         if(PlayService.mediaPlayer == null){
             // 플레이리스트 세팅, 인덱스 세팅
@@ -47,7 +49,8 @@ public class PlayUtil {
         }
     }
     public static void playOther(Context context, boolean isNext){
-        realm = Realm.getInstance(context);
+        realmConfig = new RealmConfiguration.Builder(context).build();
+        realm = Realm.getInstance(realmConfig);
         if(PlayService.mediaPlayer == null)return;
         if(isNext){//다음곡
             PlayService.INDEX++;

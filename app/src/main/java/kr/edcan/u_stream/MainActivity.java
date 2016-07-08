@@ -23,6 +23,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import es.dmoral.prefs.Prefs;
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import kr.edcan.u_stream.adapter.MainAdapter;
 import kr.edcan.u_stream.model.MusicData;
 import kr.edcan.u_stream.model.RM_MusicData;
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity{
     public static TextView playingSubtitle;
     public static ImageButton playBtn;
 
+    private Realm realm;
+    private RealmConfiguration realmConfig;
     MainAdapter adapter;
 
     @Override
@@ -78,7 +81,8 @@ public class MainActivity extends AppCompatActivity{
             public void onPageScrollStateChanged(int state) {
             }
         });
-        Realm realm = Realm.getInstance(this);
+        realmConfig = new RealmConfiguration.Builder(this).build();
+        realm = Realm.getInstance(realmConfig);
         if(PlayService.mediaPlayer == null) {
             MusicData latest = new Gson().fromJson(Prefs.with(this).read("latestPlay"), MusicData.class);
             if (latest != null) {

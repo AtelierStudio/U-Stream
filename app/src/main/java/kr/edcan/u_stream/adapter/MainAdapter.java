@@ -1,15 +1,19 @@
 package kr.edcan.u_stream.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.LinearLayout;
 
 import io.karim.MaterialTabs;
+import kr.edcan.u_stream.PlayListActivity;
 import kr.edcan.u_stream.R;
+import kr.edcan.u_stream.model.RM_PlayListData;
 import kr.edcan.u_stream.util.DesignUtil;
 
 /**
@@ -42,6 +46,16 @@ public class MainAdapter extends PagerAdapter {
                 v = mInflater.inflate(R.layout.content_main_playlist, null);
                 GridView gridView = (GridView) v.findViewById(R.id.main_playlist_grid);
                 gridView.setAdapter(playListGridAdapter);
+                gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        Intent i = new Intent(mContext, PlayListActivity.class);
+                        RM_PlayListData pData = playListGridAdapter.getPlaylist(position);
+                        i.putExtra("title",pData.getTitle());
+                        i.putExtra("id",pData.getId());
+                        mContext.startActivity(i);
+                    }
+                });
                 break;
             case 2:
                 v = mInflater.inflate(R.layout.content_main_analog, null);

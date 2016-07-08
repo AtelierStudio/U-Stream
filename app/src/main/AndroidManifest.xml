@@ -66,6 +66,7 @@
                 <data android:scheme="vnd.youtube" />
             </intent-filter>
         </activity>
+        <activity android:name=".PlayListActivity"/>
         <service android:name=".PlayService"/>
     </application>
 </manifest>

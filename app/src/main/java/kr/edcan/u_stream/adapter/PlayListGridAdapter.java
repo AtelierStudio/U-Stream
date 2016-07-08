@@ -12,6 +12,7 @@ import com.bumptech.glide.Glide;
 import com.orhanobut.logger.Logger;
 
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 import kr.edcan.u_stream.R;
 import kr.edcan.u_stream.model.RM_MusicData;
@@ -24,12 +25,14 @@ public class PlayListGridAdapter  extends BaseAdapter {
     LayoutInflater mInflater;
     Context mContext;
     RealmResults<RM_PlayListData> pList;
-    Realm realm;
+    private Realm realm;
+    private RealmConfiguration realmConfig;
     public PlayListGridAdapter(Context context){
         Logger.init("ASDF");
         mContext = context;
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        realm = Realm.getInstance(mContext);
+        realmConfig = new RealmConfiguration.Builder(context).build();
+        realm = Realm.getInstance(realmConfig);
         pList = realm.where(RM_PlayListData.class).findAll();
     }
     @Override
@@ -39,7 +42,11 @@ public class PlayListGridAdapter  extends BaseAdapter {
 
     @Override
     public Object getItem(int position) {
-        return null;
+        return pList.get(position);
+    }
+
+    public RM_PlayListData getPlaylist(int position){
+        return (RM_PlayListData) this.getItem(position);
     }
 
     @Override
