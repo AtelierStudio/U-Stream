@@ -284,6 +284,60 @@ public class DialogUtil {
         mDlg.show();
     }
 
+    public static void editPlayListDialog(final Context mContext, final RM_PlayListData data){
+        realmConfig = new RealmConfiguration.Builder(mContext).build();
+        realm = Realm.getInstance(realmConfig);
+        MaterialDialog mDlg = new MaterialDialog.Builder(mContext)
+                .title("재생목록 편집")
+                .titleColorRes(R.color.colorPrimary)
+                .backgroundColorRes(R.color.lgt_background)
+                .positiveColorRes(R.color.colorPrimary)
+                .positiveText("저장")
+                .negativeColorRes(R.color.text_gray)
+                .negativeText("취소")
+                .neutralColorRes(R.color.colorPrimary)
+                .neutralText("삭제")
+                .inputType(InputType.TYPE_CLASS_TEXT)
+                .input("제목을 입력해주세요.", data.getTitle(), new MaterialDialog.InputCallback() {
+                    @Override
+                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                    }
+                })
+                .widgetColorRes(R.color.colorPrimary)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        final String input = dialog.getInputEditText().getText().toString();
+                        if (input.trim().equals("")) {
+                            dialog.dismiss();
+                            editPlayListDialog(mContext, data);
+                        } else {
+                            realm.executeTransaction(new Realm.Transaction() {
+                                @Override
+                                public void execute(Realm realm) {
+                                    data.setTitle(input);
+                                }
+                            });
+                        }
+                    }
+                })
+                .onNeutral(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                data.deleteFromRealm();
+                            }
+                        });
+                    }
+                })
+                .build();
+        DesignUtil.setFont(mContext, mDlg.getTitleView());
+        DesignUtil.setFont(mContext, mDlg.getContentView());
+        DesignUtil.setFont(mContext, mDlg.getInputEditText());
+        mDlg.show();
+    }
     static class getMusicsTask extends AsyncTask<String, String, ArrayList<RM_MusicData>>{
         String id;
         Context mContext;

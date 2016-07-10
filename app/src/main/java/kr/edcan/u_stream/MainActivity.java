@@ -2,7 +2,6 @@ package kr.edcan.u_stream;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.Space;
@@ -26,7 +25,6 @@ import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import kr.edcan.u_stream.adapter.MainAdapter;
 import kr.edcan.u_stream.model.MusicData;
-import kr.edcan.u_stream.model.RM_MusicData;
 import kr.edcan.u_stream.util.PlayUtil;
 /**
  * Created by LNTCS on 2015-12-29.
@@ -68,7 +66,7 @@ public class MainActivity extends AppCompatActivity{
                 LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, (position + positionOffset));
                 tabMargin.setLayoutParams(param);
                 for (TextView tv : mainTabs) {
-                    tv.setTextColor(getResources().getColorStateList(R.drawable.selector_primary_color));
+                    tv.setTextColor(getResources().getColorStateList(R.color.selector_primary_color));
                 }
                 mainTabs.get(Math.round(position + positionOffset)).setTextColor(getResources().getColor(R.color.colorPrimary));
             }

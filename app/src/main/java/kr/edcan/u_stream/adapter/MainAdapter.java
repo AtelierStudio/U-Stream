@@ -15,6 +15,7 @@ import kr.edcan.u_stream.PlayListActivity;
 import kr.edcan.u_stream.R;
 import kr.edcan.u_stream.model.RM_PlayListData;
 import kr.edcan.u_stream.util.DesignUtil;
+import kr.edcan.u_stream.util.DialogUtil;
 
 /**
  * Created by LNTCS on 2016-03-11.
@@ -54,6 +55,13 @@ public class MainAdapter extends PagerAdapter {
                         i.putExtra("title",pData.getTitle());
                         i.putExtra("id",pData.getId());
                         mContext.startActivity(i);
+                    }
+                });
+                gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                    @Override
+                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                        DialogUtil.editPlayListDialog(mContext, playListGridAdapter.getPlaylist(position));
+                        return true;
                     }
                 });
                 break;
