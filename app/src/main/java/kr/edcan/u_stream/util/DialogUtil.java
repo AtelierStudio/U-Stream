@@ -443,7 +443,7 @@ public class DialogUtil {
                     }
                     mData.setUploader(snippet.getString("channelTitle"));
                     mData.setDescription(snippet.getString("description"));
-                    mData.setVideoId(items.getJSONObject(i).getString("id"));
+                    mData.setVideoId(snippet.getJSONObject("resourceId").getString("videoId"));
                     mList.add(mData);
                     musicId++;
                 }
