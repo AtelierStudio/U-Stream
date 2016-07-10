@@ -138,6 +138,8 @@ public class SearchActivity extends AppCompatActivity {
 
             private String getThumb(JSONObject snippet) throws JSONException {
                 String result = "";
+                if(!snippet.has("thumbnails"))
+                    return result;
                 JSONObject jsonObject = snippet.getJSONObject("thumbnails");
                 if(jsonObject.has("high") && !jsonObject.isNull("high")){
                     result = jsonObject.getJSONObject("high").getString("url");
