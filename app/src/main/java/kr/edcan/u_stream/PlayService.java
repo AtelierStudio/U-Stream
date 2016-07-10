@@ -119,6 +119,7 @@ public class PlayService extends Service {
                     playSet(link, isStart);
                 } else {
                     Toast.makeText(mContext, "죄송합니다.\n재생할 수 없는 영상입니다.", Toast.LENGTH_SHORT).show();
+                    PlayUtil.playOther(mContext, true);
                 }
             }
         };
@@ -264,11 +265,16 @@ public class PlayService extends Service {
     public static void updateState(Pair<String, String> info) {
         // 상단 알림
         RemoteViews rv = notification.contentView;
-        rv.setTextViewText(R.id.notify_title, info.first);
-        rv.setTextViewText(R.id.notify_subtitle, info.second);
-        rv.setImageViewResource(R.id.notify_play, (mediaPlayer.isPlaying())? R.drawable.selector_notify_pause: R.drawable.selector_notify_play);
-        NotificationTarget notificationTarget = new NotificationTarget(mContext,rv,R.id.notify_thumb,notification,NOTIFICATION_NUM);
-        Glide.with(mContext).load(nowPlaying.getThumbnail()).asBitmap().placeholder(R.drawable.ic_notify_album).into(notificationTarget);
+        if(rv != null){
+            rv.setTextViewText(R.id.notify_title, info.first);
+            rv.setTextViewText(R.id.notify_subtitle, info.second);
+            rv.setImageViewResource(R.id.notify_play, (mediaPlayer.isPlaying())? R.drawable.selector_notify_pause: R.drawable.selector_notify_play);
+            NotificationTarget notificationTarget = new NotificationTarget(mContext,rv,R.id.notify_thumb,notification,NOTIFICATION_NUM);
+            Glide.with(mContext).load(nowPlaying.getThumbnail()).asBitmap().placeholder(R.drawable.ic_notify_album).into(notificationTarget);
+        }else{
+            makeNotification();
+            updateState(new Pair<>(nowPlaying.getTitle(), "불러오는 중..."));
+        }
         // 메인화면 아래의 바
         if(MainActivity.playingTitle != null && MainActivity.playingSubtitle != null && MainActivity.playBtn != null){
             MainActivity.playBtn.setImageResource((mediaPlayer.isPlaying())?R.drawable.ic_btm_pause: R.drawable.ic_btm_play);
