@@ -21,7 +21,6 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.NotificationTarget;
-import com.google.gson.Gson;
 import com.orhanobut.logger.Logger;
 
 import java.io.BufferedOutputStream;
@@ -38,7 +37,6 @@ import java.util.ArrayList;
 import at.huber.youtubeExtractor.Meta;
 import at.huber.youtubeExtractor.YouTubeUriExtractor;
 import at.huber.youtubeExtractor.YtFile;
-import es.dmoral.prefs.Prefs;
 import kr.edcan.u_stream.model.MusicData;
 import kr.edcan.u_stream.util.PlayUtil;
 
@@ -312,9 +310,10 @@ public class PlayService extends Service {
         views.setImageViewResource(R.id.notify_play, (mediaPlayer.isPlaying()) ? R.drawable.selector_notify_pause : R.drawable.selector_notify_play);
 
         Intent i = new Intent(mContext, PlayerActivity.class);
+        i.putExtra("go2Main", true);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent pi = PendingIntent.getActivity(mContext, 0, i, 0);
+        PendingIntent pi = PendingIntent.getActivity(mContext, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
         notification.contentIntent = pi;
         setIntent(views);
     }

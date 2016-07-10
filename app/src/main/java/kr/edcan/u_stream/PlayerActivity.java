@@ -243,4 +243,12 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
             PlayUtil.runService(mContext, mData, true);
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        if(getIntent().getBooleanExtra("go2Main", false)){
+            startActivity(new Intent(this, MainActivity.class));
+        }
+        super.onDestroy();
+    }
 }

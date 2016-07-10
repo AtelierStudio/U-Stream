@@ -8,8 +8,8 @@ android {
         applicationId "kr.edcan.u_stream"
         minSdkVersion 14
         targetSdkVersion 21
-        versionCode 1
-        versionName "0.0.1b"
+        versionCode 3
+        versionName "0.0.3b"
     }
 
     packagingOptions {
@@ -29,7 +29,7 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            debuggable true
+            debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
