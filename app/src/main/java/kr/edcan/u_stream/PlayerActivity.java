@@ -246,11 +246,6 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
 
     @Override
     protected void onDestroy() {
-        if(getIntent().getBooleanExtra("go2Main", false)){
-            Intent i = new Intent(this, MainActivity.class);
-            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(i);
-        }
         super.onDestroy();
     }
 }

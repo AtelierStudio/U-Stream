@@ -316,7 +316,6 @@ public class PlayService extends Service {
         views.setImageViewResource(R.id.notify_play, (mediaPlayer.isPlaying()) ? R.drawable.selector_notify_pause : R.drawable.selector_notify_play);
 
         Intent i = new Intent(mContext, PlayerActivity.class);
-        i.putExtra("go2Main", true);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pi = PendingIntent.getActivity(mContext, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
