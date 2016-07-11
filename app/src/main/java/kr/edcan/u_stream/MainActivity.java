@@ -26,6 +26,7 @@ import io.realm.RealmConfiguration;
 import kr.edcan.u_stream.adapter.MainAdapter;
 import kr.edcan.u_stream.model.MusicData;
 import kr.edcan.u_stream.util.PlayUtil;
+
 /**
  * Created by LNTCS on 2015-12-29.
  */
@@ -47,7 +48,6 @@ public class MainActivity extends AppCompatActivity{
     private Realm realm;
     private RealmConfiguration realmConfig;
     MainAdapter adapter;
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,6 +93,18 @@ public class MainActivity extends AppCompatActivity{
             }
         }
     }
+/*
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_comming);
+        findViewById(R.id.goBeta).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/apps/testing/kr.edcan.u_stream")));
+            }
+        });
+    }*/
     private void initBtmBar() {
         playBtn = (ImageButton) findViewById(R.id.main_playing_btn);
 
@@ -118,7 +130,8 @@ public class MainActivity extends AppCompatActivity{
     @Override
     protected void onResume() {
         super.onResume();
-        adapter.notifyDataSetChanged();
+        if(adapter != null)
+            adapter.notifyDataSetChanged();
         if(PlayService.mediaPlayer != null && PlayService.nowPlaying != null){
             PlayService.updateState(new Pair<>(PlayService.nowPlaying.getTitle(), PlayService.nowPlaying.getUploader()));
         }
