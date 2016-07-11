@@ -13,15 +13,18 @@ public class Broadcast extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())){
-            if(PlayService.mediaPlayer != null) {
-                PlayService.mediaPlayer.pause();
-                PlayService.updateState(
-                        new Pair<>(
-                                PlayService.nowPlaying.getTitle(),
-                                PlayService.nowPlaying.getUploader()
-                        )
-                );
-            }
+            pause();
+        }
+    }
+    void pause(){
+        if(PlayService.mediaPlayer != null) {
+            PlayService.mediaPlayer.pause();
+            PlayService.updateState(
+                    new Pair<>(
+                            PlayService.nowPlaying.getTitle(),
+                            PlayService.nowPlaying.getUploader()
+                    )
+            );
         }
     }
 }
