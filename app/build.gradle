@@ -8,8 +8,8 @@ android {
         applicationId "kr.edcan.u_stream"
         minSdkVersion 14
         targetSdkVersion 21
-        versionCode 10
-        versionName "0.0.10b"
+        versionCode 11
+        versionName "0.0.11b"
     }
 
     packagingOptions {

@@ -67,5 +67,10 @@
         </activity>
         <activity android:name=".PlayListActivity"/>
         <service android:name=".PlayService"/>
+        <receiver android:name =".Broadcast">
+            <intent-filter android:priority="9999">
+                <action android:name="android.media.AUDIO_BECOMING_NOISY" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
