@@ -65,6 +65,7 @@ public class PlayService extends Service {
         handler = new Handler();
         notification = new Notification(R.drawable.ic_noti, "μ'Stream", System.currentTimeMillis());
         manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        PlayerActivity.primarySeekBarProgressUpdater();
     }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -255,7 +256,6 @@ public class PlayService extends Service {
 
 
     public static void updateTimePrg() {
-        PlayerActivity.primarySeekBarProgressUpdater();
         if(PlayerActivity.timeProgressBar != null && PlayerActivity.totalTime != null && mediaPlayer != null) {
             PlayerActivity.timeProgressBar.setMax(mediaPlayer.getDuration() / 1000);
             PlayerActivity.totalTime.setText(PlayUtil.parseTime(mediaPlayer.getDuration()));

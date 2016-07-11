@@ -156,23 +156,29 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
     }
 
     public static void primarySeekBarProgressUpdater() {
-        if(timeProgressBar == null)return;
-        if (PlayService.mediaPlayer != null) {
-            if(!timeProgressBar.isTouching()) {
-                int progress = (int) (((float) PlayService.mediaPlayer.getCurrentPosition() / 1000));
-                timeProgressBar.setProgress((progress > 0)? progress : 0);
-                timeProgressBar.setSecondaryProgress(PlayService.buffer);
-            }
-            Runnable notification = new Runnable() {
-                public void run() {
-                    primarySeekBarProgressUpdater();
+        if(timeProgressBar != null) {
+            if (PlayService.mediaPlayer != null) {
+                if (!timeProgressBar.isTouching()) {
+                    int progress = (int) (((float) PlayService.mediaPlayer.getCurrentPosition() / 1000));
+                    timeProgressBar.setProgress((progress > 0) ? progress : 0);
+                    timeProgressBar.setSecondaryProgress(PlayService.buffer);
+                    Logger.i(PlayService.buffer + "" + PlayService.nowPlaying.getTitle());
                 }
-            };
-            handler.postDelayed(notification,1000);
-        }else{
-            timeProgressBar.setProgress(0);
-            timeProgressBar.setSecondaryProgress(0);
+                if (!PlayService.playable) {
+                    timeProgressBar.setProgress(0);
+                    timeProgressBar.setSecondaryProgress(0);
+                }
+            } else {
+                timeProgressBar.setProgress(0);
+                timeProgressBar.setSecondaryProgress(0);
+            }
         }
+        Runnable notification = new Runnable() {
+            public void run() {
+                primarySeekBarProgressUpdater();
+            }
+        };
+        handler.postDelayed(notification,1000);
     }
     @Override
     public boolean onTouch(View v, MotionEvent event) {
