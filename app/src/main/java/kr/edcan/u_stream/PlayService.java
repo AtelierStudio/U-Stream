@@ -161,6 +161,7 @@ public class PlayService extends Service {
                     if(isStart) {
                         mediaPlayer.start();
                     }
+                    updateTimePrg();
                     updateState(new Pair<>(nowPlaying.getTitle(), nowPlaying.getUploader()));
                 }
             });
@@ -187,7 +188,6 @@ public class PlayService extends Service {
 
         @Override
         protected void onPostExecute(String s) {
-            updateTimePrg();
             super.onPostExecute(s);
         }
 
