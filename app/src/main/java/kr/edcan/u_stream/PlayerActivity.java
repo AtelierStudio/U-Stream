@@ -28,6 +28,7 @@ import java.io.IOException;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import es.dmoral.prefs.Prefs;
 import kr.edcan.u_stream.model.MusicData;
 import kr.edcan.u_stream.util.PlayUtil;
 import kr.edcan.u_stream.util.YouTubeClient;
@@ -41,6 +42,8 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
     TextView playedTime;
     @Bind(R.id.player_sound_seekbar)
     SeekBar volumeBar;
+    @Bind(R.id.player_repeat_type)
+    ImageButton rpType;
 
     public static final Handler handler = new Handler();
     Context mContext;
@@ -52,6 +55,7 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
 
     public static TextView totalTime;
     public static ImageView thumbnail;
+    int[] types = new int[]{R.drawable.ic_repeat_on, R.drawable.ic_repeat_one_on, R.drawable.ic_shuffle_on};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +92,7 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
         if(PlayService.mediaPlayer != null && PlayService.nowPlaying != null){
             PlayService.updateState(new Pair<>(PlayService.nowPlaying.getTitle(), PlayService.nowPlaying.getUploader()));
         }
+        rpType.setImageResource(types[Prefs.with(this).readInt("repeatType", 0)]);
     }
 
     // 프로그레스바의 초기화
@@ -247,5 +252,13 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    @OnClick(R.id.player_repeat_type) void changeType(View v){
+        Prefs.with(this).writeInt("repeatType", (Prefs.with(this).readInt("repeatType", 0) + 1) % 3);
+        int type = Prefs.with(this).readInt("repeatType",0);
+        ((ImageButton)v).setImageResource(types[type]);
+//        if(PlayService.nowPlaying != null)
+//            PlayUtil.setPlayingList(type, PlayService.nowPlaying);
     }
 }

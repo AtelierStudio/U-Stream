@@ -70,7 +70,6 @@
         <receiver android:name =".Broadcast">
             <intent-filter android:priority="9999">
                 <action android:name="android.media.AUDIO_BECOMING_NOISY" />
-                <action android:name="android.intent.action.VIEW"/>
             </intent-filter>
         </receiver>
     </application>

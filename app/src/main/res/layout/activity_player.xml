@@ -159,23 +159,23 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent">
             <ImageButton
-                android:id="@+id/player_repeat"
+                android:id="@+id/player_show_list"
                 android:layout_marginLeft="12dp"
                 android:layout_marginRight="12dp"
                 android:padding="6dp"
                 android:layout_centerInParent="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_repeat_off"/>
+                android:src="@drawable/ic_queue_music"/>
             <ImageButton
-                android:id="@+id/player_shuffle"
+                android:id="@+id/player_repeat_type"
                 android:layout_marginLeft="12dp"
                 android:layout_marginRight="12dp"
                 android:padding="6dp"
                 android:layout_centerInParent="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_shuffle_off"/>
+                android:src="@drawable/ic_repeat_on"/>
             <RelativeLayout
                 android:layout_marginLeft="12dp"
                 android:layout_marginRight="12dp"
