@@ -162,7 +162,6 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
                     int progress = (int) (((float) PlayService.mediaPlayer.getCurrentPosition() / 1000));
                     timeProgressBar.setProgress((progress > 0) ? progress : 0);
                     timeProgressBar.setSecondaryProgress(PlayService.buffer);
-                    Logger.i(PlayService.buffer + "" + PlayService.nowPlaying.getTitle());
                 }
                 if (!PlayService.playable) {
                     timeProgressBar.setProgress(0);
