@@ -179,6 +179,7 @@ public class PlayService extends Service {
             try {
 //                fileUrl(url, "/tmp.mp3", mContext.getFilesDir().getAbsolutePath());
 //                mediaPlayer.setDataSource(mContext.getFilesDir() + "/tmp.mp3");
+                mediaPlayer.reset();
                 mediaPlayer.setDataSource(url);
                 mediaPlayer.prepare();
             } catch (IOException e) {
