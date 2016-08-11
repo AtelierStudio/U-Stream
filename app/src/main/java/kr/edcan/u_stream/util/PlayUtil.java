@@ -5,6 +5,7 @@ import android.content.Intent;
 
 import com.google.gson.Gson;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import es.dmoral.prefs.Prefs;
@@ -30,7 +31,7 @@ public class PlayUtil {
         Prefs.with(context).write("latestPlay", new Gson().toJson(musicData));
         if(PlayService.mediaPlayer == null){
             // 플레이리스트 세팅, 인덱스 세팅
-            setPlayingList(musicData);
+            setPlayingList(context, musicData);
             PlayService.setNowPlaying(musicData);
             Intent service = new Intent(context, PlayService.class);
             service.putExtra("isStart", isStart);
@@ -42,7 +43,7 @@ public class PlayUtil {
                 setPlayingIndex(musicData);
             }else{
                 // 다를경우 리스트 세팅
-                setPlayingList(musicData);
+                setPlayingList(context, musicData);
             }
             PlayService.setNowPlaying(musicData);
             PlayService.getPlayUrlSync(isStart);
@@ -74,14 +75,16 @@ public class PlayUtil {
             }
         }
     }
-    private static void setPlayingList(MusicData musicData) {
+    public static void setPlayingList(Context context, MusicData musicData) {
         PlayService.playingList.clear();
         RealmResults<RM_MusicData> result = realm.where(RM_MusicData.class).equalTo("playListId", musicData.getPlayListId()).findAll();
         for(int i = 0 ; i < result.size() ; ++i){
             RM_MusicData data = result.get(i);
             PlayService.playingList.add(data.getId());
         }
-//        if() //셔플상태의 경우 뒤섞기
+        if(Prefs.with(context).readInt("repeatType",0) == 2){ //셔플상태의 경우 뒤섞기
+            Collections.shuffle(PlayService.playingList);
+        }
         setPlayingIndex(musicData);
     }
     private static MusicData getMusicByIndex(){

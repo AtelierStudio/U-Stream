@@ -10,35 +10,27 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.util.Pair;
-import android.util.SparseArray;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.NotificationTarget;
+import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.orhanobut.logger.Logger;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import org.jsoup.Jsoup;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 
-import at.huber.youtubeExtractor.Meta;
-import at.huber.youtubeExtractor.YouTubeUriExtractor;
-import at.huber.youtubeExtractor.YtFile;
+import cz.msebera.android.httpclient.Header;
 import kr.edcan.u_stream.model.MusicData;
 import kr.edcan.u_stream.util.PlayUtil;
+import kr.edcan.u_stream.util.YouTubeClient;
 
 /**
  * Created by LNTCS on 2016-03-22.
@@ -99,32 +91,46 @@ public class PlayService extends Service {
         return null;
     }
 
+    //TODO api이용후 불러오지 못한 영상에 대해서 이전방식을 적용
     // youtube url에서 영상 url을 반환시킨뒤 playSet 호출
     public static void getPlayUrlSync(final boolean isStart){
         updateLoading();
-        final YouTubeUriExtractor ytEx = new YouTubeUriExtractor(mContext) {
+        YouTubeClient.getUrl(nowPlaying.getVideoId(), new AsyncHttpResponseHandler() {
             @Override
-            public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
-                if (ytFiles != null) {
-                    int maxBitrate = 0;
-                    String link = "";
-                    for(int i = 0 ; i < ytFiles.size() ; i++) {
-                        Meta m = ytFiles.get(ytFiles.keyAt(i)).getMeta();
-                        if (m.getExt().contains("webm") && m.getHeight() > 0) {
-                            if (maxBitrate < m.getAudioBitrate()) {
-                                link = ytFiles.get(ytFiles.keyAt(i)).getUrl();
-                                maxBitrate = m.getAudioBitrate();
-                            }
-                        }
-                    }
-                    playSet(link, isStart);
-                } else {
-                    Toast.makeText(mContext, "죄송합니다.\n재생할 수 없는 영상입니다.", Toast.LENGTH_SHORT).show();
-                    PlayUtil.playOther(mContext, true);
-                }
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                String link = "http://www.youtubeinmp4.com/" + Jsoup.parse(new String(responseBody)).select("#downloadMP4").first().attr("href");
+                Logger.e(link);
+                playSet(link, isStart);
             }
-        };
-        ytEx.execute("https://www.youtube.com/watch?v=" + nowPlaying.getVideoId());
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+            }
+        });// 이전방식 youtubeInmp4
+
+//        final YouTubeUriExtractor ytEx = new YouTubeUriExtractor(mContext) {
+//            @Override
+//            public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
+//                if (ytFiles != null) {
+//                    int maxBitrate = 0;
+//                    String link = "";
+//                    for(int i = 0 ; i < ytFiles.size() ; i++) {
+//                        Meta m = ytFiles.get(ytFiles.keyAt(i)).getMeta();
+//                        if (m.getExt().contains("webm") && m.getHeight() > 0) {
+//                            if (maxBitrate < m.getAudioBitrate()) {
+//                                link = ytFiles.get(ytFiles.keyAt(i)).getUrl();
+//                                maxBitrate = m.getAudioBitrate();
+//                            }
+//                        }
+//                    }
+//                    playSet(link, isStart);
+//                } else {
+//                    Toast.makeText(mContext, "죄송합니다.\n재생할 수 없는 영상입니다.", Toast.LENGTH_SHORT).show();
+//                    PlayUtil.playOther(mContext, true);
+//                }
+//            }
+//        };
+//        ytEx.execute("https://www.youtube.com/watch?v=" + nowPlaying.getVideoId());
+
     }
     public static void updateLoading() {
         playable = false;
@@ -147,6 +153,7 @@ public class PlayService extends Service {
             super.onPreExecute();
             if(mediaPlayer.isPlaying())
                 mediaPlayer.stop();
+            mediaPlayer.reset();
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mediaPlayer.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
@@ -169,7 +176,9 @@ public class PlayService extends Service {
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
+                    Logger.e("COMPLETE");
                     updateState(new Pair<>(nowPlaying.getTitle(), nowPlaying.getUploader()));
+                    Logger.e("UPDATE_COMPLETE");
                     PlayUtil.playOther(mContext, true); // 한곡재생이라면 여기서 다시 프로그레스를 0으로
                 }
             });
@@ -179,79 +188,18 @@ public class PlayService extends Service {
             try {
 //                fileUrl(url, "/tmp.mp3", mContext.getFilesDir().getAbsolutePath());
 //                mediaPlayer.setDataSource(mContext.getFilesDir() + "/tmp.mp3");
-                mediaPlayer.setDataSource(url);
-                mediaPlayer.prepareAsync();
+                mediaPlayer.setDataSource(mContext, Uri.parse(url));
 //                mediaPlayer.prepare();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            mediaPlayer.prepareAsync();
             return null;
         }
 
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-        }
-
-        public static void fileUrl(String fAddress, String localFileName,String destinationDir) {
-            OutputStream outStream = null;
-            URLConnection uCon = null;
-            HttpURLConnection mHttpCon;
-            InputStream is = null;
-            int len = 0;
-            try {
-                URL url;
-                byte[] buf;
-                int ByteRead, ByteWritten = 0;
-                url = new URL(fAddress);
-                File file = new File(destinationDir + localFileName);
-                if(file.exists()){
-                    file.delete();
-                }
-                outStream = new BufferedOutputStream(new FileOutputStream(
-                        destinationDir + localFileName));
-                try {
-                    mHttpCon = (HttpURLConnection) url.openConnection();
-                    while (!url.toString().startsWith("https")) {
-                        mHttpCon.getResponseCode();
-                        url = mHttpCon.getURL();
-                        mHttpCon = (HttpURLConnection) url.openConnection();
-                    }
-                    is = mHttpCon.getInputStream();
-                    len = mHttpCon.getContentLength();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                buf = new byte[1024];
-                long latest = System.currentTimeMillis();
-                while ((ByteRead = is.read(buf)) != -1) {
-                    outStream.write(buf, 0, ByteRead);
-                    ByteWritten += ByteRead;
-                    final int finalLen = len;
-                    final int finalByteWritten = ByteWritten;
-                    if(latest < System.currentTimeMillis()-1000) {
-                        Log.e("asdf", "asdf");
-                        latest = System.currentTimeMillis();
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                updateState(new Pair<>(nowPlaying.getTitle(),
-                                        String.format("%.2f", finalByteWritten /1000000f) + "Mb" +
-                                                " / " + String.format("%.2f", finalLen /1000000f) + "Mb"));
-                            }
-                        });
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    is.close();
-                    outStream.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 
@@ -299,6 +247,7 @@ public class PlayService extends Service {
             }else{
                 PlayUtil.stopForeground(mContext);
                 Logger.d("STOP FOREGROUND SERVICE");
+                //
             }
         }
     }

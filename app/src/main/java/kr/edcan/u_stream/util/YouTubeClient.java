@@ -16,10 +16,6 @@ public class YouTubeClient {
     public static final String key_search= "AIzaSyCGfe8nemQS_9webbrBUODZKtC1PXcpiDM";
     public static final String key_list= "AIzaSyBidYxusin-5L013M4NDWhmvMojYJMtylc";
 
-    public static final String API_URL = "http://www.youtubeinmp4.com/youtube.php?video=";
-    public static final String REDIRECT_URL = "http://www.youtubeinmp4.com/";
-    public static final String DOWNLOAD_URL = "http://www.w6.youtubeinmp3.com/download/";
-
     private static AsyncHttpClient client = new AsyncHttpClient();
 
     public static void search(RequestParams params, AsyncHttpResponseHandler responseHandler) {
@@ -49,5 +45,8 @@ public class YouTubeClient {
             }
         }
         return vId;
+    }
+    public static void getUrl(String ID, AsyncHttpResponseHandler responseHandler){
+            client.get("http://www.youtubeinmp4.com/youtube.php?video=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D" + ID, new RequestParams(), responseHandler);
     }
 }

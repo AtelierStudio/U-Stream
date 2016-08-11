@@ -263,7 +263,10 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
         Prefs.with(this).writeInt("repeatType", (Prefs.with(this).readInt("repeatType", 0) + 1) % 3);
         int type = Prefs.with(this).readInt("repeatType",0);
         ((ImageButton)v).setImageResource(types[type]);
-//        if(PlayService.nowPlaying != null)
+        if(PlayService.nowPlaying != null){
+            PlayUtil.setPlayingList(this, PlayService.nowPlaying);
+        }
+//        if()
 //            PlayUtil.setPlayingList(type, PlayService.nowPlaying);
     }
 }

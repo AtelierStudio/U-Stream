@@ -65,7 +65,7 @@
                 <data android:scheme="vnd.youtube" />
             </intent-filter>
         </activity>
-        <activity android:name=".PlayListActivity"/>
+        <activity android:name="PlayListActivity"/>
         <service android:name=".PlayService"/>
         <receiver android:name =".Broadcast">
             <intent-filter android:priority="9999">
