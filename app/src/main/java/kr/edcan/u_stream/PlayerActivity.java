@@ -18,6 +18,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.orhanobut.logger.Logger;
 
 import org.jsoup.Jsoup;
@@ -89,6 +90,7 @@ public class PlayerActivity extends AppCompatActivity implements  View.OnTouchLi
         timeProgressBar = (SeekArc) findViewById(R.id.player_seek);
         thumbnail = (ImageView) findViewById(R.id.player_thumbnail);
         totalTime = (TextView) findViewById(R.id.player_tv_total);
+        Glide.with(this).load(R.drawable.bg_default_album).into(thumbnail);
         if(PlayService.mediaPlayer != null && PlayService.nowPlaying != null){
             PlayService.updateState(new Pair<>(PlayService.nowPlaying.getTitle(), PlayService.nowPlaying.getUploader()));
         }

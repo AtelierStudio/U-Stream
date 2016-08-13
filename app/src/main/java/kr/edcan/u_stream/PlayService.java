@@ -15,22 +15,22 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Pair;
+import android.util.SparseArray;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.NotificationTarget;
-import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.orhanobut.logger.Logger;
-
-import org.jsoup.Jsoup;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
-import cz.msebera.android.httpclient.Header;
+import at.huber.youtubeExtractor.Meta;
+import at.huber.youtubeExtractor.YouTubeUriExtractor;
+import at.huber.youtubeExtractor.YtFile;
 import kr.edcan.u_stream.model.MusicData;
 import kr.edcan.u_stream.util.PlayUtil;
-import kr.edcan.u_stream.util.YouTubeClient;
 
 /**
  * Created by LNTCS on 2016-03-22.
@@ -49,6 +49,7 @@ public class PlayService extends Service {
     public static  Handler handler;
     public static Context mContext;
     public static int buffer = 0;
+    public static YouTubeUriExtractor ytEx;
     @Override
     public void onCreate() {
         super.onCreate();
@@ -69,7 +70,7 @@ public class PlayService extends Service {
             manager.notify(NOTIFICATION_NUM, notification);
         }else if (intent.getAction().equals(PlayUtil.STOPFOREGROUND_ACTION)) {
             if(notification != null) {
-                stopForeground(false);
+//                stopForeground(false); // 이거땜에 앱 쥬금
                 notification.flags = Notification.FLAG_AUTO_CANCEL;
                 manager.notify(NOTIFICATION_NUM, notification);
             }
@@ -95,41 +96,40 @@ public class PlayService extends Service {
     // youtube url에서 영상 url을 반환시킨뒤 playSet 호출
     public static void getPlayUrlSync(final boolean isStart){
         updateLoading();
-        YouTubeClient.getUrl(nowPlaying.getVideoId(), new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                String link = "http://www.youtubeinmp4.com/" + Jsoup.parse(new String(responseBody)).select("#downloadMP4").first().attr("href");
-                Logger.e(link);
-                playSet(link, isStart);
-            }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-            }
-        });// 이전방식 youtubeInmp4
-
-//        final YouTubeUriExtractor ytEx = new YouTubeUriExtractor(mContext) {
+//        YouTubeClient.getUrl(nowPlaying.getVideoId(), new AsyncHttpResponseHandler() {
 //            @Override
-//            public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
-//                if (ytFiles != null) {
-//                    int maxBitrate = 0;
-//                    String link = "";
-//                    for(int i = 0 ; i < ytFiles.size() ; i++) {
-//                        Meta m = ytFiles.get(ytFiles.keyAt(i)).getMeta();
-//                        if (m.getExt().contains("webm") && m.getHeight() > 0) {
-//                            if (maxBitrate < m.getAudioBitrate()) {
-//                                link = ytFiles.get(ytFiles.keyAt(i)).getUrl();
-//                                maxBitrate = m.getAudioBitrate();
-//                            }
-//                        }
-//                    }
-//                    playSet(link, isStart);
-//                } else {
-//                    Toast.makeText(mContext, "죄송합니다.\n재생할 수 없는 영상입니다.", Toast.LENGTH_SHORT).show();
-//                    PlayUtil.playOther(mContext, true);
-//                }
+//            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+//                String link = "http://www.youtubeinmp4.com/" + Jsoup.parse(new String(responseBody)).select("#downloadMP4").first().attr("href");
+//                Logger.e(link);
+//                playSet(link, isStart);
 //            }
-//        };
-//        ytEx.execute("https://www.youtube.com/watch?v=" + nowPlaying.getVideoId());
+//            @Override
+//            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+//            }
+//        });// 이전방식 youtubeInmp4
+        ytEx = new YouTubeUriExtractor(mContext) {
+            @Override
+            public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
+                if (ytFiles != null) {
+                    int maxBitrate = 0;
+                    String link = "";
+                    for (int i = 0; i < ytFiles.size(); i++) {
+                        Meta m = ytFiles.get(ytFiles.keyAt(i)).getMeta();
+                        if (m.getExt().contains("webm") && m.getHeight() > 0) {
+                            if (maxBitrate < m.getAudioBitrate()) {
+                                link = ytFiles.get(ytFiles.keyAt(i)).getUrl();
+                                maxBitrate = m.getAudioBitrate();
+                            }
+                        }
+                    }
+                    playSet(link, isStart);
+                } else {
+                    Toast.makeText(mContext, "죄송합니다.\n재생할 수 없는 영상입니다.", Toast.LENGTH_SHORT).show();
+                    PlayUtil.playOther(mContext, true);
+                }
+            }
+        };
+        ytEx.execute("https://www.youtube.com/watch?v=" + nowPlaying.getVideoId());
 
     }
     public static void updateLoading() {
@@ -176,9 +176,7 @@ public class PlayService extends Service {
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    Logger.e("COMPLETE");
                     updateState(new Pair<>(nowPlaying.getTitle(), nowPlaying.getUploader()));
-                    Logger.e("UPDATE_COMPLETE");
                     PlayUtil.playOther(mContext, true); // 한곡재생이라면 여기서 다시 프로그레스를 0으로
                 }
             });
@@ -235,7 +233,7 @@ public class PlayService extends Service {
             if(!PlayerActivity.playingTitle.getText().equals(info.first)) {
                 PlayerActivity.playingTitle.setText(info.first);
                 PlayerActivity.playingTitle.setSelected(true);
-                Glide.with(mContext).load(nowPlaying.getThumbnail()).asBitmap().placeholder(R.drawable.bg_default_album).into(PlayerActivity.thumbnail);
+                Glide.with(mContext).load(nowPlaying.getThumbnail()).asBitmap().into(PlayerActivity.thumbnail);
             }
             PlayerActivity.playingSubtitle.setText(info.second);
             PlayerActivity.playBtn.setImageResource((mediaPlayer.isPlaying())?R.drawable.ic_pause: R.drawable.ic_play);
@@ -246,7 +244,6 @@ public class PlayService extends Service {
                 PlayUtil.resumeForeground(mContext);
             }else{
                 PlayUtil.stopForeground(mContext);
-                Logger.d("STOP FOREGROUND SERVICE");
                 //
             }
         }
